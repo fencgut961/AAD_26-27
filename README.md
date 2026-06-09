@@ -65,8 +65,6 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ## RA5. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
 
-### Criterios de evaluación
-
 - **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar bases de datos documentales nativas.
 - **CEv b.** Se ha establecido la conexión con la base de datos.
 - **CEv c.** Se han desarrollado aplicaciones que efectúan consultas sobre el contenido de la base de datos.
