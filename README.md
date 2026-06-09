@@ -87,19 +87,6 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## Tecnologías previstas
-
-- Java 21
-- Maven
-- JDBC
-- JPA
-- Hibernate ORM
-- MySQL / MariaDB
-- PostgreSQL
-- MongoDB
-- Git
-- GitHub
-
 ---
 
 ## Metodología de trabajo
