@@ -40,8 +40,6 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ## RA3. Gestiona la persistencia de los datos identificando herramientas de mapeo objeto relacional (ORM) y desarrollando aplicaciones que las utilizan.
 
-### Criterios de evaluación
-
 - **CEv a.** Se ha instalado la herramienta ORM.
 - **CEv b.** Se ha configurado la herramienta ORM.
 - **CEv c.** Se han definido configuraciones de mapeo.
@@ -67,6 +65,8 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ## RA5. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
 
+### Criterios de evaluación
+
 - **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar bases de datos documentales nativas.
 - **CEv b.** Se ha establecido la conexión con la base de datos.
 - **CEv c.** Se han desarrollado aplicaciones que efectúan consultas sobre el contenido de la base de datos.
@@ -86,7 +86,6 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 - **CEv g.** Se han programado componentes que gestionan información almacenada en una base de datos documental nativa.
 - **CEv h.** Se han probado y documentado los componentes desarrollados.
 - **CEv i.** Se han integrado los componentes desarrollados en aplicaciones.
-```
 
 ---
 
