@@ -8,9 +8,9 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-# Resultados de Aprendizaje y Criterios de Evaluación
+## Resultados de Aprendizaje y Criterios de Evaluación
 
-## RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
+### RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
 
 - **CEv a.** Se han utilizado clases para la gestión de ficheros y directorios.
 - **CEv b.** Se han valorado las ventajas y los inconvenientes de las distintas formas de acceso.
@@ -22,7 +22,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## RA2. Desarrolla aplicaciones que gestionan información almacenada en bases de datos relacionales identificando y utilizando mecanismos de conexión.
+### RA2. Desarrolla aplicaciones que gestionan información almacenada en bases de datos relacionales identificando y utilizando mecanismos de conexión.
 
 - **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar conectores.
 - **CEv b.** Se han utilizado gestores de bases de datos embebidos e independientes.
@@ -38,7 +38,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## RA3. Gestiona la persistencia de los datos identificando herramientas de mapeo objeto relacional (ORM) y desarrollando aplicaciones que las utilizan.
+### RA3. Gestiona la persistencia de los datos identificando herramientas de mapeo objeto relacional (ORM) y desarrollando aplicaciones que las utilizan.
 
 - **CEv a.** Se ha instalado la herramienta ORM.
 - **CEv b.** Se ha configurado la herramienta ORM.
@@ -50,7 +50,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## RA4. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos objeto relacionales y orientadas a objetos valorando sus características y utilizando los mecanismos de acceso incorporados.
+### RA4. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos objeto relacionales y orientadas a objetos valorando sus características y utilizando los mecanismos de acceso incorporados.
 
 - **CEv a.** Se han identificado las ventajas e inconvenientes de las bases de datos que almacenan objetos.
 - **CEv b.** Se han establecido y cerrado conexiones.
@@ -63,7 +63,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## RA5. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
+### RA5. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
 
 - **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar bases de datos documentales nativas.
 - **CEv b.** Se ha establecido la conexión con la base de datos.
@@ -73,7 +73,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## RA6. Programa componentes de acceso a datos identificando las características que debe poseer un componente y utilizando herramientas de desarrollo.
+### RA6. Programa componentes de acceso a datos identificando las características que debe poseer un componente y utilizando herramientas de desarrollo.
 
 - **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar programación orientada a componentes.
 - **CEv b.** Se han identificado herramientas de desarrollo de componentes.
