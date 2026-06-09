@@ -1,4 +1,4 @@
-# Acceso a Datos (AD)
+# Acceso a Datos (AAD)
 
 Repositorio destinado al desarrollo de actividades prácticas del módulo profesional **Acceso a Datos**, perteneciente al ciclo formativo de **Desarrollo de Aplicaciones Multiplataforma (DAM)**.
 
@@ -8,132 +8,85 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ---
 
-## Estructura de ramas
+# Resultados de Aprendizaje y Criterios de Evaluación
 
-| Rama | Resultado de Aprendizaje |
-|--------|-------------------------|
-| `RA0/environment` | Preparación del entorno de desarrollo |
-| `RA1/act_1_1` | Gestión de información mediante ficheros |
-| `RA2/act_2_1` | Acceso a bases de datos relacionales |
-| `RA3/act_3_1` | Persistencia mediante ORM |
-| `RA4/act_4_1` | Bases de datos objeto-relacionales y orientadas a objetos |
-| `RA5/act_5_1` | Bases de datos documentales nativas |
-| `RA6/act_6_1` | Desarrollo de componentes de acceso a datos |
+## RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
 
----
-
-# Resultados de Aprendizaje
-
-## RA1. Gestión de información en ficheros
-
-Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
-
-### Criterios de evaluación
-
-- Utilización de clases para la gestión de ficheros y directorios.
-- Valoración de ventajas e inconvenientes de las distintas formas de acceso.
-- Recuperación de información almacenada en ficheros.
-- Almacenamiento de información en ficheros.
-- Conversión entre diferentes formatos de ficheros.
-- Gestión de excepciones.
-- Pruebas y documentación de las aplicaciones desarrolladas.
-
-**Rama:** `RA1/act_1_1`
+- **CEv a.** Se han utilizado clases para la gestión de ficheros y directorios.
+- **CEv b.** Se han valorado las ventajas y los inconvenientes de las distintas formas de acceso.
+- **CEv c.** Se han utilizado clases para recuperar información almacenada en ficheros.
+- **CEv d.** Se han utilizado clases para almacenar información en ficheros.
+- **CEv e.** Se han utilizado clases para realizar conversiones entre diferentes formatos de ficheros.
+- **CEv f.** Se han previsto y gestionado las excepciones.
+- **CEv g.** Se han probado y documentado las aplicaciones desarrolladas.
 
 ---
 
-## RA2. Acceso a bases de datos relacionales
+## RA2. Desarrolla aplicaciones que gestionan información almacenada en bases de datos relacionales identificando y utilizando mecanismos de conexión.
 
-Desarrolla aplicaciones que gestionan información almacenada en bases de datos relacionales identificando y utilizando mecanismos de conexión.
-
-### Criterios de evaluación
-
-- Valoración de ventajas e inconvenientes del uso de conectores.
-- Utilización de gestores de bases de datos embebidos e independientes.
-- Selección del conector adecuado.
-- Establecimiento de conexiones.
-- Definición de la estructura de la base de datos.
-- Desarrollo de operaciones de modificación de datos.
-- Definición de objetos para almacenar resultados de consultas.
-- Desarrollo de consultas sobre la base de datos.
-- Liberación de recursos utilizados.
-- Gestión de transacciones.
-- Ejecución de procedimientos almacenados.
-
-**Rama:** `RA2/act_2_1`
+- **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar conectores.
+- **CEv b.** Se han utilizado gestores de bases de datos embebidos e independientes.
+- **CEv c.** Se ha utilizado el conector idóneo en la aplicación.
+- **CEv d.** Se ha establecido la conexión.
+- **CEv e.** Se ha definido la estructura de la base de datos.
+- **CEv f.** Se han desarrollado aplicaciones que modifican el contenido de la base de datos.
+- **CEv g.** Se han definido los objetos destinados a almacenar el resultado de las consultas.
+- **CEv h.** Se han desarrollado aplicaciones que efectúan consultas.
+- **CEv i.** Se han eliminado los objetos una vez finalizada su función.
+- **CEv j.** Se han gestionado las transacciones.
+- **CEv k.** Se han ejecutado procedimientos almacenados en la base de datos.
 
 ---
 
-## RA3. Persistencia mediante ORM
-
-Gestiona la persistencia de los datos identificando herramientas de mapeo objeto-relacional (ORM) y desarrollando aplicaciones que las utilizan.
+## RA3. Gestiona la persistencia de los datos identificando herramientas de mapeo objeto relacional (ORM) y desarrollando aplicaciones que las utilizan.
 
 ### Criterios de evaluación
 
-- Instalación de herramientas ORM.
-- Configuración de herramientas ORM.
-- Definición de mapeos objeto-relacionales.
-- Aplicación de mecanismos de persistencia.
-- Desarrollo de aplicaciones para almacenar y recuperar objetos persistentes.
-- Realización de consultas mediante SQL.
-- Gestión de transacciones.
-
-**Rama:** `RA3/act_3_1`
+- **CEv a.** Se ha instalado la herramienta ORM.
+- **CEv b.** Se ha configurado la herramienta ORM.
+- **CEv c.** Se han definido configuraciones de mapeo.
+- **CEv d.** Se han aplicado mecanismos de persistencia a los objetos.
+- **CEv e.** Se han desarrollado aplicaciones que modifican y recuperan objetos persistentes.
+- **CEv f.** Se han desarrollado aplicaciones que realizan consultas usando el lenguaje SQL.
+- **CEv g.** Se han gestionado las transacciones.
 
 ---
 
-## RA4. Bases de datos objeto-relacionales y orientadas a objetos
+## RA4. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos objeto relacionales y orientadas a objetos valorando sus características y utilizando los mecanismos de acceso incorporados.
 
-Desarrolla aplicaciones que gestionan la información almacenada en bases de datos objeto-relacionales y orientadas a objetos valorando sus características y utilizando los mecanismos de acceso incorporados.
-
-### Criterios de evaluación
-
-- Identificación de ventajas e inconvenientes de las bases de datos orientadas a objetos.
-- Establecimiento y cierre de conexiones.
-- Persistencia de objetos simples.
-- Persistencia de objetos estructurados.
-- Desarrollo de consultas.
-- Modificación de objetos almacenados.
-- Gestión de transacciones.
-- Pruebas y documentación de aplicaciones.
-
-**Rama:** `RA4/act_4_1`
+- **CEv a.** Se han identificado las ventajas e inconvenientes de las bases de datos que almacenan objetos.
+- **CEv b.** Se han establecido y cerrado conexiones.
+- **CEv c.** Se ha gestionado la persistencia de objetos simples.
+- **CEv d.** Se ha gestionado la persistencia de objetos estructurados.
+- **CEv e.** Se han desarrollado aplicaciones que realizan consultas.
+- **CEv f.** Se han modificado los objetos almacenados.
+- **CEv g.** Se han gestionado las transacciones.
+- **CEv h.** Se han probado y documentado las aplicaciones desarrolladas.
 
 ---
 
-## RA5. Bases de datos documentales nativas
+## RA5. Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
 
-Desarrolla aplicaciones que gestionan la información almacenada en bases de datos documentales nativas evaluando y utilizando clases específicas.
-
-### Criterios de evaluación
-
-- Valoración de ventajas e inconvenientes de las bases de datos documentales.
-- Establecimiento de conexiones.
-- Desarrollo de consultas sobre documentos.
-- Gestión de colecciones.
-- Desarrollo de operaciones de inserción, modificación y eliminación de documentos.
-
-**Rama:** `RA5/act_5_1`
+- **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar bases de datos documentales nativas.
+- **CEv b.** Se ha establecido la conexión con la base de datos.
+- **CEv c.** Se han desarrollado aplicaciones que efectúan consultas sobre el contenido de la base de datos.
+- **CEv d.** Se han añadido y eliminado colecciones de la base de datos.
+- **CEv e.** Se han desarrollado aplicaciones para añadir, modificar y eliminar documentos de la base de datos.
 
 ---
 
-## RA6. Componentes de acceso a datos
+## RA6. Programa componentes de acceso a datos identificando las características que debe poseer un componente y utilizando herramientas de desarrollo.
 
-Programa componentes de acceso a datos identificando las características que debe poseer un componente y utilizando herramientas de desarrollo.
-
-### Criterios de evaluación
-
-- Valoración de la programación orientada a componentes.
-- Identificación de herramientas de desarrollo de componentes.
-- Desarrollo de componentes para gestión de ficheros.
-- Desarrollo de componentes para acceso a bases de datos mediante conectores.
-- Desarrollo de componentes utilizando ORM.
-- Desarrollo de componentes para bases de datos objeto-relacionales y orientadas a objetos.
-- Desarrollo de componentes para bases de datos documentales nativas.
-- Pruebas y documentación de componentes.
-- Integración de componentes en aplicaciones.
-
-**Rama:** `RA6/act_6_1`
+- **CEv a.** Se han valorado las ventajas e inconvenientes de utilizar programación orientada a componentes.
+- **CEv b.** Se han identificado herramientas de desarrollo de componentes.
+- **CEv c.** Se han programado componentes que gestionan información almacenada en ficheros.
+- **CEv d.** Se han programado componentes que gestionan mediante conectores información almacenada en bases de datos.
+- **CEv e.** Se han programado componentes que gestionan información usando mapeo objeto relacional.
+- **CEv f.** Se han programado componentes que gestionan información almacenada en bases de datos objeto relacionales y orientadas a objetos.
+- **CEv g.** Se han programado componentes que gestionan información almacenada en una base de datos documental nativa.
+- **CEv h.** Se han probado y documentado los componentes desarrollados.
+- **CEv i.** Se han integrado los componentes desarrollados en aplicaciones.
+```
 
 ---
 
@@ -157,4 +110,3 @@ Programa componentes de acceso a datos identificando las características que de
 Cada actividad se desarrolla de forma independiente en su propia rama. Una vez finalizada, documentada y validada, podrá integrarse con el resto de evidencias del módulo.
 
 La rama `main` actúa como punto de entrada y documentación general del proyecto.
-
