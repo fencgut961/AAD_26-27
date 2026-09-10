@@ -4,7 +4,7 @@
 
 ## 1. Introducción al Almacenamiento y Gestión de Ficheros
 
-En el desarrollo de aplicaciones de nivel empresarial, la ingeniería de datos y la administración de sistemas, **los ficheros constituyen el mecanismo primario e indispensable para garantizar la persistencia de la información**. Permiten que los datos sobrevivivan a la ejecución de un programa o al apagado físico del hardware, sirviendo como puente de comunicación en el tiempo y el espacio.
+En el desarrollo de aplicaciones empresariales, la ingeniería de datos y la administración de sistemas, **los ficheros constituyen el mecanismo primario e indispensable para garantizar la persistencia de la información**. Permiten que los datos sobrevivan a la finalización de un programa o al apagado físico del hardware, sirviendo como puente de comunicación en el tiempo y el espacio.
 
 ### 1.1. ¿Qué es realmente un Fichero?
 Un fichero (o archivo) es una **unidad lógica de almacenamiento** de información direccionable que reside en un dispositivo físico secundario. Su naturaleza cambia según el nivel de abstracción desde el que se analice:
@@ -12,12 +12,12 @@ Un fichero (o archivo) es una **unidad lógica de almacenamiento** de informaci�
 ```text
   👤 NIVEL DE USUARIO (Abstracción Lógica)
   ┌─────────────────────────────────────────────────────────────────┐
-  │ "students.csv" ➔ Archivo estructurado con filas de texto.       │
+  │ "alumnos.csv" ➔ Archivo estructurado con filas de texto.        │
   └────────────────────────────────┬────────────────────────────────┘
                                    ▼
   💻 NIVEL DE SISTEMA OPERATIVO (Metadatos y Organización)
   ┌─────────────────────────────────────────────────────────────────┐
-  │ Ruta: /var/datos/students.csv                                   │
+  │ Ruta: /var/datos/alumnos.csv                                    │
   │ Permisos: Lectura [R] | Escritura [W]                           │
   │ Metadatos: Tamaño (4 KB), Propietario, Fecha de Modificación.   │
   └────────────────────────────────┬────────────────────────────────┘
@@ -53,8 +53,47 @@ La interacción del software con los datos almacenados ha pasado por tres grande
 ```
 
 1.  **Era de los Ficheros Planos (Flat Files)**: Los datos se organizaban en registros y campos dentro de ficheros de texto o binarios sin índices globales. La manipulación era lineal y muy rígida. Lenguajes como COBOL o FORTRAN trabajaban directamente con estos ficheros.
+
+```text
+📄 Ejemplo de Registro en Fichero Plano (Longitud Fija COBOL/DAT):
+  Posición de Bytes: [0...3] [4...............23] [24............38] [39......46]
+  Campos Fijos:      [ ID ]  [      Nombre      ] [     Puesto      ] [  Salario ]
+  Registro 1:        0001    Clara Oswald         Shop Manager    02550.00
+  Registro 2:        0002    Pedro Almodovar      Clerk           01350.00
+  ➔ Inconveniente: Para buscar al empleado 2, el sistema debe leer obligatoriamente los 47 bytes del Registro 1.
+```
+
 2.  **Era de las Bases de Datos Relacionales (RDBMS)**: Sistemas como Oracle, SQL Server o MySQL superaron las limitaciones de los ficheros planos. Aportaron consultas complejas (SQL), transacciones seguras (ACID), seguridad avanzada y concurrencia multiusuario. Los ficheros directos quedaron relegados a tareas de soporte (logs, configuraciones y exportaciones).
+
+```text
+🗄️ Ejemplo de Abstracción Relacional (Tabla SQL e Índice B-Tree):
+  Consulta SQL: SELECT name, salary FROM employees WHERE id = 2;
+  ┌────┬────────────────┬──────────────┬────────┐
+  │ ID │ Name           │ Role         │ Salary │  ➔ El motor RDBMS consulta un índice
+  ├────┼────────────────┼──────────────┼────────┤     B-Tree en disco y salta de forma
+  │ 1  │ Clara Oswald   │ SHOP_MANAGER │ 2550.00│     instantánea a la fila con ID=2
+  │ 2  │ Pedro Almodovar│ CLERK        │ 1350.00│     sin escanear la tabla entera.
+  └────┴────────────────┴──────────────┴────────┘
+```
+
 3.  **Era de la Interconectividad y el Big Data**: Con la expansión de Internet y la comunicación entre sistemas heterogéneos, los ficheros volvieron a cobrar protagonismo como formato estándar de intercambio. Surgieron formatos universales legibles por humanos (CSV, XML, JSON, YAML). Además, la explosión del Big Data implicó trabajar con volúmenes masivos de datos en sistemas de archivos distribuidos (como HDFS en Hadoop) o almacenes de objetos en la nube (como Amazon S3, Google Cloud Storage o Azure Blob Storage) accesibles mediante APIs.
+
+```text
+🌐 Ejemplo de Formatos Universales de Intercambio (Misma información):
+
+  JSON (Web & APIs REST):               YAML (Configuraciones Microservicios):
+  {                                     employee:
+    "id": 1,                              id: 1
+    "name": "Clara Oswald",               name: Clara Oswald
+    "role": "SHOP_MANAGER",               role: SHOP_MANAGER
+    "salary": 2550.00                     salary: 2550.00
+  }
+
+  CSV (Tabular Plano):                  XML (Sistemas Legados Enterprise):
+  id,name,role,salary                   <employee>
+  1,"Clara Oswald",SHOP_MANAGER,2550.00   <id>1</id><name>Clara Oswald</name>
+                                        </employee>
+```
 
 ---
 
@@ -64,18 +103,48 @@ En las arquitecturas de software modernas, los ficheros desempeñan un papel fun
 *   **Persistencia Básica**: Guardar información rápida sin necesidad de desplegar una base de datos.
 *   **Intercambio de Datos**: Enviar y recibir información entre plataformas heterogéneas mediante formatos estándar (CSV, JSON).
 *   **Logs y Auditoría**: Registrar de forma secuencial la actividad del sistema para tareas de depuración y seguridad.
+
+```text
+📝 Ejemplo de Entrada en Fichero de Log de Servidor (access.log):
+2026-09-10 10:15:22.401 [WARN] [ShopService] - User ID 42 updated inventory item #101. Response status: 200 OK
+```
+
 *   **Configuración de Aplicaciones**: Definir el comportamiento del sistema mediante ficheros legibles (formatos `.properties`, `.yaml` o `.xml`) sin necesidad de volver a compilar el código.
+
+```yaml
+# Ejemplo de Fichero de Configuración (application.yaml)
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aadtex_db
+```
+
 *   **Procesamiento Masivo**: Soporte esencial para Big Data, Machine Learning y procesos de extracción, transformación y carga (ETL).
 *   **Integración con la Nube**: Subir, descargar, versionar e interactuar con ficheros remotos de forma automatizada.
 
-```text
- 🔍 ESCENARIO INTEGRAL DE INTEGRACIÓN MULTI-FICHERO
- Una aplicación web moderna puede:
-  1. Cargar sus credenciales de base de datos desde un fichero local "config.yaml".
-  2. Escribir cada petición de usuario en un fichero secuencial "access.log".
-  3. Enviar un reporte estructurado "reporte.json" a través de una API REST.
-  4. Guardar una copia física de la factura del cliente en un bucket de Amazon S3 en la nube.
-```
+---
+
+### 1.4. Almacenamiento en la Nube: Buckets y Almacenamiento de Objetos (Object Storage)
+
+En la arquitectura de aplicaciones modernas desplegadas en la nube (AWS, Google Cloud, Microsoft Azure), la gestión de archivos ha evolucionado desde los sistemas de archivos locales hacia el **Almacenamiento de Objetos (Object Storage)** organizado en **Buckets**.
+
+#### 🪣 ¿Qué es un Bucket y cómo se diferencia de un Sistema de Archivos Local?
+
+Un **Bucket** es un contenedor lógico en la nube que almacena datos en forma de **objetos** dentro de un espacio de nombres totalmente plano (*flat namespace*), a diferencia de la estructura de árbol jerárquica con carpetas e inodos de los sistemas de archivos tradicionales (FAT32, NTFS, ext4).
+
+
+
+#### 🔑 Conceptos Clave de Object Storage en la Nube:
+1. **Espacio de Nombres Plano (Key-Value)**: No existen "carpetas reales" en un Bucket. La apariencia de directorios (como ) es solo un truco visual logrado usando el carácter diagonal  dentro de la **Clave (Key)** del objeto.
+2. **Inmutabilidad de los Objetos**: Los archivos en un Bucket son atómicos e inmutables. No se puede modificar un byte individual a mitad de un archivo como en un disco local; para actualizar un objeto se sube una nueva versión completa que reemplaza o versiona a la anterior.
+3. **Escalabilidad Infinita y Durabilidad**: Los proveedores de nube garantizan una durabilidad del 99.999999999% (los llamados "11 nueves"), replicando los bytes del objeto automáticamente en múltiples centros de datos físicos.
+4. **Acceso mediante APIs REST HTTP/HTTPS**: Los archivos en la nube no se leen abriendo descriptores del sistema operativo (), sino realizando peticiones web seguras de red (, , ) mediante SDKs oficiales del proveedor.
+
+#### 🚀 Ejemplo Práctico en Java: Operaciones con Buckets de Amazon S3 (AWS SDK v2)
+Este código muestra cómo una aplicación Spring Boot interactúa con un Bucket en la nube para verificar la existencia de un contenedor, subir un archivo encriptado y descargarlo mediante el cliente oficial de AWS.
+
+
 
 ---
 
@@ -92,7 +161,10 @@ Están compuestos por bytes que representan **caracteres codificados bajo un est
   el alfabeto (la codificación) puede abrirla y leer su contenido directamente.
 ```
 
-*   **Formatos representativos**: `.txt` (texto plano), `.csv` (datos tabulares), `.json`, `.xml`, `.yaml` (datos estructurados para intercambio).
+*   **Formatos representativos**:
+    *   `.txt`: Texto plano sin estructura predefinida.
+    *   `.csv`: Filas de valores separados por comas o puntos y comas.
+    *   `.json`, `.xml`, `.yaml`: Estructuras clave-valor o en árbol con metadatos.
 *   👍 **Ventajas**: Altamente legibles por seres humanos, fáciles de editar con cualquier herramienta básica y con una portabilidad universal absoluta entre plataformas.
 *   👎 **Inconvenientes**: Consumen más espacio físico de almacenamiento y su velocidad de procesamiento es menor en grandes volúmenes de datos, ya que requieren un proceso intermedio de traducción (parseo) a objetos de memoria.
 
@@ -113,7 +185,9 @@ public class TextFileProcessor {
         
         try {
             // Datos en formato CSV estructurado
-            String csvData = "ID,Name,Role\n1,Sophia,Developer\n2,Marcus,Project Manager";
+            String csvData = "ID,Name,Role
+1,Sophia,Developer
+2,Marcus,Project Manager";
             
             // Escribir el contenido en el fichero forzando la codificación UTF-8
             Files.writeString(path, csvData, StandardCharsets.UTF_8);
@@ -121,7 +195,8 @@ public class TextFileProcessor {
             
             // Leer el contenido completo del fichero en un String
             String retrievedContent = Files.readString(path, StandardCharsets.UTF_8);
-            System.out.println("\n--- Retrieved Content ---");
+            System.out.println("
+--- Retrieved Content ---");
             System.out.println(retrievedContent);
             
         } catch (IOException e) {
@@ -142,6 +217,16 @@ Almacenan información en formato de **bytes crudos**, codificados siguiendo una
   Un fichero binario es como un código QR o una cinta perforada: a simple vista parece
   una secuencia incomprensible de marcas, pero un lector especializado (el software correcto)
   puede traducirlo instantáneamente en una imagen, un sonido o un programa ejecutable.
+```
+
+```text
+📦 Estructura Interna de un Fichero Binario (.PNG / .CLASS / .ZIP):
+  ┌────────────────────┬────────────────────┬──────────────────────────────────────┐
+  │ Cabecera (Header)  │ Metadata del For.  │ Cuerpo de Datos Crudos (Payload)     │
+  ├────────────────────┼────────────────────┼──────────────────────────────────────┤
+  │ Bytes mágicos:     │ Ancho, Alto, Color │ Secuencia comprimida de píxeles o    │
+  │ 89 50 4E 47 (.PNG) │ o Tabla de Símb.   │ instrucciones de bytecode compilado  │
+  └────────────────────┴────────────────────┴──────────────────────────────────────┘
 ```
 
 *   **Formatos representativos**: Imágenes (`.png`, `.jpg`), audio (`.mp3`, `.wav`), ejecutables (`.class`), comprimidos (`.zip`) o modelos de Inteligencia Artificial.
@@ -248,14 +333,15 @@ public class ConsoleImageRenderer {
                     Color bottomPixelColor = new Color(scaledImage.getRGB(x, y + 1));
                     
                     // Ensamblar la cadena con códigos ANSI para color de fuente (top) y fondo (bottom)
-                    String colorString = "\u001B[38;2;" + topPixelColor.getRed() + ";" + topPixelColor.getGreen() + ";" + topPixelColor.getBlue() + "m" +
-                                         "\u001B[48;2;" + bottomPixelColor.getRed() + ";" + bottomPixelColor.getGreen() + ";" + bottomPixelColor.getBlue() + "m" +
+                    String colorString = "[38;2;" + topPixelColor.getRed() + ";" + topPixelColor.getGreen() + ";" + topPixelColor.getBlue() + "m" +
+                                         "[48;2;" + bottomPixelColor.getRed() + ";" + bottomPixelColor.getGreen() + ";" + bottomPixelColor.getBlue() + "m" +
                                          "▀"; // Carácter especial de bloque superior coloreado
                     
                     System.out.print(colorString);
                 }
                 // Restablecer estilos al final de cada línea de la consola
-                System.out.print("\u001B[0m\n");
+                System.out.print("[0m
+");
             }
             
         } catch (IOException e) {
@@ -267,11 +353,90 @@ public class ConsoleImageRenderer {
 
 ---
 
-### 2.3. Formatos Híbridos Modernos
+### 2.3. Formatos Híbridos Modernos y Serialización Base64
 Muchas de las estructuras que utilizamos diariamente combinan ambas tecnologías de forma transparente para ofrecer portabilidad y potencia:
 *   **Formatos de Oficina (DOCX, XLSX, PPTX)**: No son un único archivo; en realidad son contenedores comprimidos (formato binario `.zip`) que albergan en su interior una jerarquía de ficheros estructurados de texto plano (XML) y recursos multimedia individuales.
+
+```text
+📂 Descomposición de un Fichero Híbrido Documento.docx (ZIP contenedor):
+  Documento.docx (Renombrado a .zip y descomprimido)
+  ├── [Content_Types].xml         (Texto plano XML: metadatos de tipos)
+  ├── word/
+  │   ├── document.xml            (Texto plano XML: el cuerpo completo del documento)
+  │   ├── styles.xml              (Texto plano XML: estilos de fuente)
+  │   └── media/
+  │       └── image1.png          (Binario puro: imagen insertada en la página)
+```
+
 *   **Archivos PDF**: Combinan bloques de texto plano para definir la maquetación física de la página con flujos binarios comprimidos para incrustar gráficos vectoriales e imágenes.
 *   **Serialización Base64**: Técnica de codificación que traduce cualquier secuencia de bytes binarios (como un archivo PDF o una imagen) en una cadena de caracteres legibles y seguros para su transmisión web. Esto permite incrustar recursos multimedia dentro de un mensaje de texto (como JSON) sin corromper el canal de comunicación.
+
+```text
+🔤 Transformación de un Archivo Binario a Cadena Base64 para JSON:
+  [ Bytes Binarios Crudos ]  ➔  [ 3 Bytes = 24 bits ]  ➔  [ Dividir en 4 bloques de 6 bits ]
+  01000001 01000010 01000011     010000 | 010100 | 001001 | 000011
+  
+  Mapear según Tabla ASCII Base64 ➔ "QUJD"
+  
+  Resultado incrustado en JSON:
+  {
+    "filename": "avatar.png",
+    "mimeType": "image/png",
+    "dataBase64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA..."
+  }
+```
+
+#### 🚀 Ejemplo Práctico en Java: Codificación y decodificación de binarios en Base64 para JSON
+Este código funcional permite tomar cualquier archivo binario de imagen local, convertir sus bytes a una cadena Base64 pura y simular la recepción y restauración del archivo físico original desde esa cadena de texto.
+
+```java
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+public class Base64FileProcessor {
+    public static void main(String[] args) {
+        Path imagePath = Paths.get("image.jpg");
+        Path restoredPath = Paths.get("restored_image.jpg");
+
+        if (!Files.exists(imagePath)) {
+            System.out.println("Please provide 'image.jpg' in the root directory to test Base64 conversion.");
+            return;
+        }
+
+        try {
+            // 1. Leer los bytes crudos del archivo binario
+            byte[] binaryBytes = Files.readAllBytes(imagePath);
+            System.out.println("1. Read " + binaryBytes.length + " bytes from binary file.");
+
+            // 2. Codificar los bytes binarios a una cadena Base64 (Texto ASCII seguro)
+            String base64EncodedString = Base64.getEncoder().encodeToString(binaryBytes);
+            System.out.println("2. Encoded to Base64 String. First 50 chars: " + 
+                               base64EncodedString.substring(0, Math.min(50, base64EncodedString.length())) + "...");
+
+            // 3. Simular payload JSON
+            String jsonPayload = "{
+  "filename": "image.jpg",
+  "content": "" + base64EncodedString + ""
+}";
+            System.out.println("3. Simulated JSON Payload constructed successfully.");
+
+            // 4. Decodificar la cadena Base64 de vuelta a un arreglo de bytes binarios
+            byte[] decodedBytes = Base64.getDecoder().decode(base64EncodedString);
+
+            // 5. Guardar los bytes restaurados en disco como una nueva imagen física
+            Files.write(restoredPath, decodedBytes);
+            System.out.println("4. Decoded bytes written to '" + restoredPath.getFileName() + "'. Matching original size: " + decodedBytes.length + " bytes.");
+
+        } catch (IOException e) {
+            System.err.println("Error processing Base64 conversion: " + e.getMessage());
+        }
+    }
+}
+```
 
 ---
 
@@ -279,104 +444,106 @@ Muchas de las estructuras que utilizamos diariamente combinan ambas tecnologías
 La codificación (o juego de caracteres) es la **regla de traducción matemática** que define qué carácter gráfico corresponde a cada byte de información almacenado en el disco duro.
 
 ```text
-           [ SECUENCIA FÍSICA EN DISCO: 11000011 10001001 ]
-                              │
-       ┌──────────────────────┴──────────────────────┐
-       ▼                                             ▼
-  Interpretado bajo ISO-8859-1                 Interpretado bajo UTF-8
-  Muestra: "Ã©" (Inconsistencia / Error)       Muestra: "é" (Traducción Correcta)
+💥 El Fenómeno "Mojibake" (Corrupción de Caracteres):
+  Bytes físicos grabados en disco (UTF-8 para la palabra 'Canción'):
+  [ 0x43 ] [ 0x61 ] [ 0x6E ] [ 0x63 ] [ 0x69 ] [ 0xC3 0xB3 ] [ 0x6E ]
+    'C'      'a'      'n'      'c'      'i'       'ó'        'n'
+
+  Si la aplicación lee el archivo usando la tabla ISO-8859-1 (Latin-1):
+  [ 0xC3 ] ➔ Interpretado como 'Ã'
+  [ 0xB3 ] ➔ Interpretado como '³'
+  Resultado corrupto mostrado en pantalla: "CanciÃ³n"
 ```
 
 *   **ASCII**: El estándar clásico de 7 bits. Extremadamente limitado, solo contempla 128 caracteres del alfabeto inglés básico y caracteres de control.
-*   **ISO-8859-1 (Latin-1)**: Extensión de 8 bits (256 caracteres) adaptada para lenguas de Europa occidental. Presenta graves problemas de incompatibilidad al migrar entre plataformas.
-*   **UTF-8**: El estándar universal absoluto de ancho variable (utiliza de 1 a 4 bytes por carácter según su complejidad). Es compatible hacia atrás con ASCII y capaz de representar de forma unificada cualquier carácter del catálogo Unicode (incluyendo tildes, alfabetos asiáticos como Chino/Japonés y emojis).
+*   **ISO-8859-1 (Latin-1)**: Extensión de 8 bits (256 caracteres) adaptada para lenguas de Europa occidental. Presenta graves problemas de compatibilidad al migrar entre plataformas.
+*   **UTF-8**: El estándar universal absoluto de ancho variable (utiliza de 1 a 4 bytes por carácter según su complejidad). Es compatible hacia atrás con ASCII y capaz de representar de forma unificada cualquier carácter del catálogo Unicode (incluyendo tildes, alfabetos asiáticos y emojis).
 *   **UTF-16**: Estándar de ancho fijo (generalmente 2 bytes por carácter) que la máquina virtual de Java (JVM) utiliza internamente para representar y manipular las cadenas de texto (`String`) en la memoria RAM.
 
-#### 🏮 El Reto de la Internacionalización: Leer Chino/Japonés y Procesarlo a Español/Inglés
-Al trabajar con ficheros de texto que contienen alfabetos no latinos (como el japonés Kanji/Kana o el chino Hanzi), el uso estricto de UTF-8 es obligatorio. Si el archivo se lee con una codificación inadecuada (como Latin-1), el texto se corrompe inmediatamente convirtiéndose en símbolos indescifrables.
+💡 **Directriz de Diseño**: Para evitar los clásicos errores de visualización de caracteres especiales (como caracteres extraños `` o fallos en las tildes), las aplicaciones deben **declarar y forzar siempre el uso de la codificación UTF-8 de manera explícita** al abrir flujos de lectura y escritura.
 
-A continuación se muestra un ejemplo avanzado y funcional que crea en caliente un fichero de cotizaciones y sabidurías en japonés (codificado estrictamente en UTF-8), lo lee de forma segura asegurando la integridad de sus caracteres no latinos, y realiza un mapeo (traducción simulada mediante un diccionario interno) para volcar el resultado traducido al español en otro archivo de salida.
+---
+
+#### 🏮 El Reto de la Internacionalización: Leer Chino/Japonés y Procesarlo a Español/Inglés
+Un caso real en ingeniería de software es la ingesta de ficheros provenientes de sistemas internacionales con caracteres complejos de la familia CJK (Chino, Japonés, Coreano). Si la aplicación no abre el archivo en UTF-8 o en el charset asiático específico (ej. `Shift_JIS` o `GBK`), la lectura colapsa.
 
 #### 🚀 Ejemplo Práctico en Java: Transcodificador y Traductor de Japonés a Español
-Este código completo puede ser copiado y ejecutado directamente en clase para que los alumnos experimenten con la lectura UTF-8 real de caracteres asiáticos complejos y su posterior procesamiento.
+Este programa genera en primer lugar un archivo en UTF-8 con caracteres en japonés (Kanji / Kana), lo lee correctamente preservando la integridad de los glifos asiáticos y procesa su traducción en un nuevo archivo de texto en español.
 
 ```java
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AsianLanguageTranscoder {
-    
-    // Diccionario de traducción en memoria para la simulación
-    private static final Map<String, String> translationDictionary = new HashMap<>();
-    
-    static {
-        translationDictionary.put("こんにちは", "Hola");
-        translationDictionary.put("継続は力なり", "La perseverancia es la clave del éxito (La perseverancia es fuerza)");
-        translationDictionary.put("猫", "Gato");
-        translationDictionary.put("富士山", "Monte Fuji");
-    }
-
     public static void main(String[] args) {
-        File sourceFile = new File("japanese_source.txt");
-        File translatedFile = new File("spanish_translation.txt");
+        File japaneseFile = new File("japanese_catalog.txt");
+        File spanishFile = new File("spanish_catalog.txt");
 
-        // 1. Crear el archivo de prueba en japonés con codificación UTF-8 explícita
+        // 1. Crear un archivo en japonés codificado estrictamente en UTF-8
         try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(sourceFile), StandardCharsets.UTF_8))) {
+                new OutputStreamWriter(new FileOutputStream(japaneseFile), StandardCharsets.UTF_8))) {
             
-            writer.write("こんにちは"); // Hola
+            writer.write("ID: 1 | Item: 富士山 | Category: 山"); // Fushisan (Monte Fuji) | Yama (Montaña)
             writer.newLine();
-            writer.write("継続は力なり"); // La perseverancia es fuerza
+            writer.write("ID: 2 | Item: 桜 | Category: 花");     // Sakura (Flor de Cerezo) | Hana (Flor)
             writer.newLine();
-            writer.write("猫"); // Gato
+            writer.write("ID: 3 | Item: 新幹線 | Category: 電車"); // Shinkansen (Tren Bala) | Densha (Tren)
             writer.newLine();
-            writer.write("富士山"); // Monte Fuji
-            writer.newLine();
-            
-            System.out.println("Japanese source file generated successfully with UTF-8.");
+            System.out.println("1. Japanese catalog file created successfully using UTF-8.");
             
         } catch (IOException e) {
-            System.err.println("Failed to write Japanese source file: " + e.getMessage());
+            System.err.println("Failed to write Japanese file: " + e.getMessage());
             return;
         }
 
-        // 2. Leer el archivo en japonés (UTF-8) y generar la traducción (UTF-8)
+        // Diccionario simple de traducción simulada
+        Map<String, String> translationMap = new HashMap<>();
+        translationMap.put("富士山", "Monte Fuji");
+        translationMap.put("山", "Naturaleza/Montaña");
+        translationMap.put("桜", "Flor de Cerezo");
+        translationMap.put("花", "Botánica/Flor");
+        translationMap.put("新幹線", "Tren Bala Shinkansen");
+        translationMap.put("電車", "Transporte/Tren");
+
+        // 2. Leer el archivo en japonés en UTF-8 y generar la versión traducida al español
         try (
             BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(sourceFile), StandardCharsets.UTF_8));
-            BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(translatedFile), StandardCharsets.UTF_8))
+                new InputStreamReader(new FileInputStream(japaneseFile), StandardCharsets.UTF_8));
+            BufferedWriter spanishWriter = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(spanishFile), StandardCharsets.UTF_8))
         ) {
             String line;
-            System.out.println("\n--- Reading Japanese file and Translating ---");
+            System.out.println("
+--- Reading Original Japanese File ---");
             
             while ((line = reader.readLine()) != null) {
-                // Limpiar la línea de posibles espacios en blanco
-                String japanesePhrase = line.trim();
+                System.out.println("Raw Read: " + line);
                 
-                // Buscar la traducción en el diccionario
-                String translation = translationDictionary.getOrDefault(japanesePhrase, "[No translation found]");
+                // Aplicar reemplazo de términos japoneses detectados en la línea
+                String translatedLine = line;
+                for (Map.Entry<String, String> entry : translationMap.entrySet()) {
+                    translatedLine = translatedLine.replace(entry.getKey(), entry.getValue());
+                }
                 
-                System.out.println("Read from file: " + japanesePhrase + " ➔ Translation: " + translation);
-                
-                // Guardar la traducción en el archivo de salida
-                writer.write("Original: " + japanesePhrase + " | Traducción: " + translation);
-                writer.newLine();
+                // Escribir la línea traducida en el archivo de salida
+                spanishWriter.write(translatedLine);
+                spanishWriter.newLine();
             }
             
-            System.out.println("\nTranslation complete. Results written to: " + translatedFile.getName());
-            
+            System.out.println("
+2. Translation process completed. File saved at: " + spanishFile.getName());
+
         } catch (IOException e) {
-            System.err.println("Translation process failed: " + e.getMessage());
+            System.err.println("Error during Asian text transcoding: " + e.getMessage());
         }
     }
 }
@@ -456,18 +623,32 @@ public class DirectoryInspector {
 Introducida para solventar las carencias del modelo clásico, separa el direccionamiento lógico del recurso de la manipulación de datos.
 
 ```text
-   FILOSOFÍA CLÁSICA (java.io.File)               FILOSOFÍA MODERNA (NIO.2)
- ┌──────────────────────────────────┐        ┌──────────────────────────────────┐
- │  • Una sola clase "File" para    │        │  • Interfaz Path: Dirección      │
- │    representar e interactuar     │   ➔    │    lógica y portable en disco.   │
- │    con la ruta física.      │        │  • Clase Files: Utilidades       │
- │  • Gestión de errores precaria.│     │    estáticas de alto rendimiento.│
- └──────────────────────────────────┘        └──────────────────────────────────┘
+ 🏗️ Arquitectura de Desacoplamiento en NIO.2:
+  ┌────────────────────────┐         ┌────────────────────────────────────────┐
+  │ Interfaz Path          │ ──────► │ Dirección Lógica URI / Rutas Portables │
+  └────────────────────────┘         └────────────────────────────────────────┘
+              │
+              ▼
+  ┌────────────────────────┐         ┌────────────────────────────────────────┐
+  │ Clase Utilid. Files    │ ──────► │ Operaciones Atómicas de Alto Rendim.   │
+  └────────────────────────┘         └────────────────────────────────────────┘
+              │
+              ▼
+  ┌────────────────────────┐         ┌────────────────────────────────────────┐
+  │ FileSystemProvider     │ ──────► │ Abstracción: Disco Local / ZIP / S3    │
+  └────────────────────────┘         └────────────────────────────────────────┘
 ```
 
 *   **La interfaz `Path`**: Representa de manera lógica la ruta de localización en el disco, abstrayendo por completo el sistema operativo subyacente y permitiendo trabajar con sistemas de archivos virtuales o distribuidos en red.
 *   **La clase de utilidad `Files`**: Centraliza todas las operaciones de manipulación física (copiar, mover, borrar, leer atributos avanzados) mediante métodos estáticos de alto rendimiento optimizados a nivel del sistema operativo.
 *   **Integración Funcional**: Se integra de forma nativa con los flujos de datos perezosos (Java Streams), permitiendo procesar millones de registros consumiendo el mínimo espacio en la memoria RAM.
+
+#### 📋 Métodos Destacados de la Clase de Utilidad `Files`
+*   `Files.copy(Path src, Path dest, CopyOption... options)`: Copia nativa a nivel de sistema operativo.
+*   `Files.move(Path src, Path dest, CopyOption... options)`: Mueve o renombra archivos atómicamente.
+*   `Files.delete(Path path)`: Elimina el recurso lanzando excepciones detalladas (`NoSuchFileException`, etc.).
+*   `Files.readString(Path path)` / `Files.writeString(...)`: Operaciones inmediatas para archivos de texto pequeños.
+*   `Files.walk(Path start)` / `Files.find(...)`: Recorrido perezoso de árboles de directorios complejos usando Streams.
 
 #### 🚀 Ejemplo Práctico en Java: Manipulación robusta de ficheros usando la API NIO.2
 Este código demuestra cómo verificar, crear y escribir en un archivo usando el paradigma de objetos `Path` y métodos estáticos de `Files`.
@@ -505,6 +686,44 @@ public class ModernFileManager {
 }
 ```
 
+#### 🚀 Ejemplo Práctico en Java: Recorrido y búsqueda recursiva de subcarpetas con `Files.walk()`
+Este código avanzado busca recursivamente todos los archivos de logs (`.txt` o `.csv`) dentro del árbol de directorios de la aplicación de forma perezosa sin agotar la RAM.
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
+
+public class DirectoryTreeScanner {
+    public static void main(String[] args) {
+        Path rootPath = Paths.get("."); // Explorar desde el directorio raíz actual
+        
+        System.out.println("--- Recursive Directory Walk with NIO.2 Streams ---");
+        
+        // Files.walk abre un Stream perezoso que explora subcarpetas anidadas de forma automática
+        try (Stream<Path> stream = Files.walk(rootPath, 5)) { // Profundidad máxima de 5 niveles
+            
+            stream.filter(Files::isRegularFile) // Filtrar solo archivos regulares (omitir carpetas)
+                  .filter(p -> p.toString().endsWith(".txt") || p.toString().endsWith(".csv")) // Filtrar por extensión
+                  .forEach(filePath -> {
+                      try {
+                          System.out.println("Found: " + filePath.getFileName() + 
+                                             " | Path: " + filePath.toAbsolutePath() + 
+                                             " | Size: " + Files.size(filePath) + " bytes");
+                      } catch (IOException e) {
+                          System.err.println("Error reading size for: " + filePath);
+                      }
+                  });
+                  
+        } catch (IOException e) {
+            System.err.println("Error walking directory tree: " + e.getMessage());
+        }
+    }
+}
+```
+
 ---
 
 ## 4. Formas de Acceso a Ficheros
@@ -515,7 +734,7 @@ La forma en que el cabezal físico o el controlador de estado sólido se desplaz
 La información se procesa en orden lineal riguroso, desde el primer byte hasta el último.
 
 ```text
-  💡 ANALOGÍA INTUITIVO (Como una cinta de casete o VHS)
+  💡 ANALOGÍA INTUITIVA (Como una cinta de casete o VHS)
   Si deseas escuchar la canción de la pista 4, estás obligado a avanzar físicamente
   la cinta por encima de las pistas 1, 2 y 3. No hay forma de saltar directamente.
 ```
@@ -559,7 +778,7 @@ public class SequentialStreamReader {
 Permite posicionar el puntero de lectura/escritura en cualquier byte arbitrario del archivo de forma instantánea, sin necesidad de recorrer la información previa.
 
 ```text
-  💡 ANALOGÍA INTUITIVO (Como un disco de vinilo o un CD)
+  💡 ANALOGÍA INTUITIVA (Como un disco de vinilo o un CD)
   Puedes levantar la aguja o el láser y colocarlo directamente sobre el inicio de la pista 4,
   reproduciendo la música sin perder tiempo en recorrer las pistas anteriores.
 ```
@@ -637,7 +856,8 @@ public class RandomAccessManager {
             int age = raf.readInt();
             double salary = raf.readDouble();
             
-            System.out.println("\n--- Directly read Record 1 ---");
+            System.out.println("
+--- Directly read Record 1 ---");
             System.out.println("ID: " + id + " | Age: " + age + " | Salary: " + salary + " EUR");
             
             // --- MODIFICACIÓN DIRECTA ---
@@ -647,11 +867,13 @@ public class RandomAccessManager {
             raf.seek(offset);
             raf.writeDouble(9999.99); // Sobrescribir el campo salario directamente
             
-            System.out.println("\nModified record 2 salary directly in disk.");
+            System.out.println("
+Modified record 2 salary directly in disk.");
             
             // --- LEER TODOS LOS REGISTROS PARA VERIFICAR ---
             raf.seek(0); // Volver al inicio físico del archivo
-            System.out.println("\n--- Final Employee Records ---");
+            System.out.println("
+--- Final Employee Records ---");
             for (int i = 0; i < 3; i++) {
                 int currentId = raf.readInt();
                 int currentAge = raf.readInt();
@@ -706,10 +928,29 @@ Toda interacción de entrada/salida (E/S) entre el programa y el soporte físico
 ---
 
 ### ⚠️ El peligro latente: Fugas de Recursos (*Resource Leaks*)
-Si el software omite la fase de cierre de los canales de comunicación:
+Si el software omite la fase de cierre de los canales de comunicación o esta falla en mitad de la ejecución:
+
+```text
+💥 Consecuencia de Omitir el Cierre (Saturación de Descriptores en el Kernel):
+  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 3
+  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 4
+  ...
+  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 1024 [LÍMITE ALCANZADO]
+  
+  Resultante: java.io.IOException: Too many open files (Colapso del servidor)
+```
+
 *   El archivo puede quedar **bloqueado indefinidamente** por el sistema operativo, impidiendo su edición por otros procesos o la propia aplicación.
 *   Se producirá una **saturación de los descriptores de archivos** en el núcleo del sistema, provocando inestabilidad y caídas en el servidor de aplicaciones.
 *   Existe un alto riesgo de **corrupción o pérdida de datos** al no garantizar el volcado final (*flush*) de las memorias RAM volátiles intermedias al disco duro físico.
+
+```text
+🛡️ Garantía de Seguridad con Try-With-Resources (Java 7+):
+  try (BufferedWriter writer = new BufferedWriter(new FileWriter("app.log"))) {
+      writer.write("Operational log");
+  } // <--- El compilador inyecta un bloque finally que ejecuta writer.close()
+    //      de forma garantizada, incluso si se lanza una RuntimeException.
+```
 
 💡 **Directriz de Diseño (Try-With-Resources)**: Para automatizar el cierre seguro, el software moderno se estructura mediante bloques de control autocerrables. Al implementar las clases de flujos la interfaz `AutoCloseable`, el compilador garantiza la liberación inmediata de todos los recursos en disco al finalizar las operaciones de forma transparente para el programador, incluso ante excepciones imprevistas en tiempo de ejecución.
 
@@ -740,7 +981,7 @@ public class SafeFileWriter {
 
 ---
 
-## 6. Jerarquía de Flujos de Datos (*Streams*)
+## 6. Jerarquía de Flujos de Datos (*Streams*) y Patrón Decorador
 
 El canal de comunicación unidireccional entre un programa y un archivo físico se conceptualiza como un **Flujo de Datos (Stream)**. Java clasifica estos flujos según la unidad de información con la que operan:
 
@@ -753,7 +994,7 @@ El canal de comunicación unidireccional entre un programa y un archivo físico 
                   ▼                                               ▼
          [ Flujos de Texto ]                             [ Flujos Binarios ]
      Manejan caracteres de 16 bits.            Manejan bytes crudos de 8 bits.
-     Clases Base: Reader y Writer.        Clases Base: InputStream y OutputStream.
+     Clases Base: Reader y Writer.         Clases Base: InputStream y OutputStream.
 ```
 
 ### 6.1. Flujos de Texto
@@ -784,7 +1025,90 @@ Se utilizan para manipular archivos que contienen secuencias de bytes crudos sin
 
 ---
 
-### 6.4. Optimización mediante el Patrón Buffering (Almacenamiento Intermedio)
+### 6.4. El Patrón Decorador (Wrapper) en `java.io`: ¿Por qué anidamos flujos?
+Una de las preguntas más frecuentes de los alumnos al aprender Java I/O es: *¿Por qué debo instanciar tres objetos diferentes para leer una simple línea de texto?*
+
+```java
+BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(
+                                new FileInputStream("datos.txt"), StandardCharsets.UTF_8));
+```
+
+La respuesta es el **Patrón de Diseño Decorador (Decorator Pattern)**. En lugar de crear una clase gigante que lo haga todo, Java separa las responsabilidades en capas anidadas ("muñecas matrioshka"):
+
+```text
+🧩 Ensamblaje de Capas en el Patrón Decorador de java.io:
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ 3. CAPA BUFFEADA (BufferedReader)                                       │
+  │    Agrega la funcionalidad de caché de 8 KB en RAM y readLine().       │
+  │  ┌──────────────────────────────────────────────────────────────────┐  │
+  │  │ 2. CAPA PUENTE DE RECODIFICACIÓN (InputStreamReader)             │  │
+  │  │    Traduce los bytes entrantes a caracteres usando UTF-8.        │  │
+  │  │  ┌────────────────────────────────────────────────────────────┐  │  │
+  │  │  │ 1. CAPA ACCESO FÍSICO (FileInputStream)                    │  │  │
+  │  │  │    Lee la secuencia de bytes crudos del disco.              │  │  │
+  │  │  └────────────────────────────────────────────────────────────┘  │  │
+  │  └──────────────────────────────────────────────────────────────────┘  │
+  └────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 🚀 Ejemplo Práctico en Java: Demostración paso a paso de la composición del Patrón Decorador
+Este código desacopla las tres capas del patrón decorador para mostrar a los alumnos cómo cada objeto envuelve al anterior añadiendo una nueva responsabilidad.
+
+```java
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+public class StreamDecoratorDemo {
+    public static void main(String[] args) {
+        File file = new File("students.csv");
+
+        if (!file.exists()) {
+            System.out.println("Please generate 'students.csv' first using TextFileProcessor.");
+            return;
+        }
+
+        try {
+            // CAPA 1: Flujo de entrada de bytes crudos desde el soporte físico
+            FileInputStream rawByteStream = new FileInputStream(file);
+            System.out.println("Capa 1: FileInputStream creado (Acceso a bytes crudos del disco).");
+
+            // CAPA 2: Traductor puente de bytes a caracteres con Charset explícito
+            InputStreamReader characterBridgeReader = new InputStreamReader(rawByteStream, StandardCharsets.UTF_8);
+            System.out.println("Capa 2: InputStreamReader envuelve a Capa 1 (Traducción de Charset a UTF-8).");
+
+            // CAPA 3: Almacenamiento intermedio en RAM y métodos de alto nivel
+            BufferedReader bufferedLineReader = new BufferedReader(characterBridgeReader);
+            System.out.println("Capa 3: BufferedReader envuelve a Capa 2 (Añade memoria caché y método readLine()).
+");
+
+            // Leer usando el objeto decorado final
+            String line;
+            System.out.println("--- Reading lines from fully decorated stream ---");
+            while ((line = bufferedLineReader.readLine()) != null) {
+                System.out.println("Line: " + line);
+            }
+
+            // Cerrar la capa exterior cierra automáticamente todas las capas interiores
+            bufferedLineReader.close();
+            System.out.println("
+All stream layers closed safely.");
+
+        } catch (IOException e) {
+            System.err.println("Error in stream decorator pipeline: " + e.getMessage());
+        }
+    }
+}
+```
+
+---
+
+### 6.5. Optimización mediante el Patrón Buffering (Almacenamiento Intermedio)
 La interacción física directa con unidades de disco para escribir o leer datos de uno en uno es extremadamente ineficiente.
 
 ```text
@@ -902,7 +1226,7 @@ public class EncodingTranscoder {
             return;
         }
         
-        // Encadenar clases puente especificando el juego de caracteres explícito
+        // Encadenar clases puente especificando el conjunto de caracteres explícito
         try (
             BufferedReader reader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(sourceFile), StandardCharsets.UTF_8));
@@ -939,145 +1263,179 @@ public class EncodingTranscoder {
 
 ## 8. Seguridad y Confidencialidad: Encriptación de Ficheros
 
-En entornos profesionales y de administración de sistemas, **la persistencia y la transmisión de datos sensibles exige mecanismos de protección criptográfica**. Almacenar contraseñas, datos financieros, registros personales de alumnos o información corporativa en texto plano en el sistema de archivos supone un grave riesgo de seguridad.
+En entornos profesionales de desarrollo y administración de sistemas, **la persistencia y la transmisión de datos sensibles exige mecanismos de protección criptográfica**. Almacenar contraseñas, credenciales de conexión, datos personales o registros corporativos en texto plano en el sistema de archivos supone un grave riesgo de seguridad.
 
 Para proteger los datos se emplean dos grandes aproximaciones criptográficas:
-1.  **Criptografía Simétrica**: Utiliza una única **clave compartida** (o frase de paso) tanto para encriptar como para desencriptar. Es extremadamente rápida y eficiente, idónea para cifrar grandes volúmenes de datos locales. El algoritmo estándar de la industria es **AES (Advanced Encryption Standard)**.
-2.  **Criptografía Asimétrica (o de Clave Pública)**: Utiliza una pareja de claves vinculadas matemáticamente: una **clave pública** (que se comparte libremente para que cualquiera pueda encriptar datos dirigidos a nosotros) y una **clave privada** (que se mantiene en estricto secreto para desencriptar la información). El estándar abierto y de software libre más utilizado es **OpenPGP**, cuya implementación principal es **GnuPG (GPG)**.
+1.  **Criptografía Simétrica**: Utiliza una única **clave compartida** (o frase de paso) tanto para encriptar como para desencriptar. Es idónea para cifrar grandes volúmenes de datos locales con alta velocidad. El algoritmo estándar es **AES (Advanced Encryption Standard)**.
+2.  **Criptografía Asimétrica (o de Clave Pública)**: Utiliza una pareja de claves vinculadas matemáticamente:
+    *   **Clave Pública**: Se comparte libremente con los compañeros o sistemas externos. Cualquiera puede usarla para **encriptar** un archivo o mensaje dirigido a nosotros.
+    *   **Clave Privada**: Se mantiene en estricto secreto. Es la **única** capaz de **desencriptar** los archivos cifrados con su correspondiente clave pública.
+    *   El estándar de referencia en la industria es **RSA / OpenPGP (GnuPG)**.
 
 ---
 
-### 8.1. Práctica de Aula: Gestión y Cifrado con GPG (GnuPG) mediante Consola de Comandos
-GPG permite proteger archivos utilizando tanto claves simétricas (fácil y rápido mediante contraseña) como llaves asimétricas públicas/privadas. A continuación se presenta una guía práctica interactiva para reproducir en clase:
+### 8.1. Práctica de Aula: Intercambio de Claves y Cifrado con GPG (GnuPG)
 
-#### 🔑 Caso 1: Cifrado Simétrico Rápido (Con Contraseña o Passphrase)
-Ideal para proteger un archivo local de forma rápida sin necesidad de gestionar llaveros de seguridad:
+A continuación se presenta el flujo interactivo sencillo para probar la criptografía de clave pública en consola entre dos compañeros de clase (Alumno A y Alumno B):
 
-```bash
-# 1. Crear un archivo de texto con datos confidenciales
-echo "CONFIDENTIAL: Exam grades for Acceso a Datos 2026" > grades.txt
-
-# 2. Cifrar de forma simétrica utilizando GPG (solicitará una contraseña en pantalla)
-gpg --symmetric --cipher-algo AES256 grades.txt
-
-# ➔ Resultado: Se genera un archivo binario encriptado llamado 'grades.txt.gpg'
-# 3. Eliminar de forma segura el archivo original en texto plano
-rm grades.txt
-
-# 4. Intentar visualizar el archivo encriptado (verás caracteres extraños ilegibles)
-cat grades.txt.gpg
-
-# 5. Desencriptar el archivo para recuperar la información original (pedirá la contraseña introducida antes)
-gpg --decrypt grades.txt.gpg > grades_recovered.txt
+```text
+       ALUMNO A                                                     ALUMNO B
+  ┌──────────────────┐                                         ┌──────────────────┐
+  │ 1. Genera par de │                                         │ 1. Genera par de │
+  │    claves GPG    │                                         │    claves GPG    │
+  └────────┬─────────┘                                         └────────┬─────────┘
+           │                                                            │
+           │  ──────── Envía su Clave Pública (student_a.key) ────────► │
+           │                                                            │
+           │                                                   ┌────────┴─────────┐
+           │                                                   │ 2. Importa clave │
+           │                                                   │    pública de A  │
+           │                                                   └────────┬─────────┘
+           │                                                            │
+           │                                                   ┌────────┴─────────┐
+           │                                                   │ 3. Cifra archivo │
+           │                                                   │    con clave de A│
+           │                                                   └────────┬─────────┘
+           │                                                            │
+           │  ◄────── Recibe mensaje cifrado (secret.txt.gpg) ───────── │
+  ┌────────┴─────────┐                                                  │
+  │ 4. Desencripta   │                                                  │
+  │    con su clave  │                                                  │
+  │    privada secret│                                                  │
+  └──────────────────┘                                                  └──────────────────┘
 ```
 
-#### 🔐 Caso 2: Cifrado Asimétrico (Clave Pública y Privada)
-Para simular el flujo real de transferencia de datos segura entre dos alumnos (ej. Alumno A y Alumno B):
+#### 🛠️ Pasos de Consola para Reproducir en Clase:
 
 ```bash
-# 1. Generar la pareja de claves criptográficas en el equipo (pública y privada)
+# === EN EL EQUIPO DEL ALUMNO A ===
+# 1. Generar la pareja de claves criptográficas (pública y privada)
 gpg --generate-key
 
-# 2. Exportar la clave pública a un archivo para enviársela a un compañero
+# 2. Exportar la clave pública a un archivo para enviársela al Alumno B
 gpg --output student_a_public.key --export student.a@school.com
 
-# 3. El Alumno B importa la clave pública del Alumno A en su sistema
+# === EN EL EQUIPO DEL ALUMNO B ===
+# 3. Importar la clave pública recibida del Alumno A
 gpg --import student_a_public.key
 
-# 4. El Alumno B cifra un archivo confidencial usando la clave pública del Alumno A
-# (Solo el Alumno A podrá desencriptarlo usando su clave privada ultra secreta)
-gpg --recipient student.a@school.com --encrypt messages.txt
+# 4. Crear un archivo con un mensaje secreto para el Alumno A
+echo "Hola Alumno A, este mensaje solo lo puedes leer tú con tu clave privada." > secret_message.txt
 
-# 5. El Alumno A recibe el archivo 'messages.txt.gpg' y lo desencripta usando su clave privada
-gpg --decrypt messages.txt.gpg > message_read.txt
+# 5. Cifrar el archivo usando la CLAVE PÚBLICA del Alumno A
+gpg --recipient student.a@school.com --encrypt secret_message.txt
+# ➔ Genera el archivo encriptado 'secret_message.txt.gpg' que se envía al Alumno A
+
+# === EN EL EQUIPO DEL ALUMNO A ===
+# 6. Desencriptar el archivo recibido utilizando SU CLAVE PRIVADA
+gpg --decrypt secret_message.txt.gpg > message_read.txt
+
+# 7. Verificar el contenido desencriptado
+cat message_read.txt
 ```
 
 ---
 
-### 8.2. Integración de la Encriptación en Java
-Para que los alumnos asimilen cómo aplicar estas directrices de seguridad de forma automatizada dentro de una aplicación de backend (Spring Boot), podemos implementar un transductor criptográfico en Java que realice operaciones simétricas de cifrado/descifrado sobre archivos utilizando el algoritmo estándar **AES-256** mediante la biblioteca nativa de criptografía de Java (`javax.crypto`).
+### 8.2. Ejemplo en Java: Cifrado Asimétrico de Ficheros (RSA)
 
-#### 🚀 Ejemplo Práctico en Java: Cifrador y Descifrador de Ficheros (Criptografía Simétrica AES)
-Este código completo permite cifrar cualquier archivo en disco con una contraseña fija de 16 caracteres (128 bits para simplificar la inicialización del vector de prueba) y revertir el proceso de forma totalmente funcional.
+Para comprender cómo funciona el cifrado de clave pública dentro de una aplicación Java, implementaremos un ejemplo autónomo y sencillo (`AsymmetricFileCrypto.java`). 
+
+El programa:
+1. Genera un par de claves **RSA (Pública y Privada)** de 2048 bits.
+2. Utiliza la **Clave Pública** para cifrar un archivo de texto (`secret_raw.txt`), generando el fichero protegido (`secret_encrypted.enc`).
+3. Utiliza la **Clave Privada** para descifrar el fichero (`secret_encrypted.enc`), recuperando los datos originales en (`secret_decrypted.txt`).
+
+#### 🚀 Código Completo en Java: `AsymmetricFileCrypto.java`
 
 ```java
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 
-public class SecureFileEncryptor {
-
-    // Clave secreta simétrica fija de 16 bytes (128 bits de longitud para AES)
-    private static final String SECRET_KEY_STRING = "AadTexSecurityKey"; 
-    private static final String ALGORITHM = "AES";
+public class AsymmetricFileCrypto {
 
     public static void main(String[] args) {
-        File plainFile = new File("grades_raw.txt");
-        File encryptedFile = new File("grades_secured.enc");
-        File decryptedFile = new File("grades_recovered.txt");
+        File rawFile = new File("secret_raw.txt");
+        File encryptedFile = new File("secret_encrypted.enc");
+        File decryptedFile = new File("secret_decrypted.txt");
 
-        // 1. Inicializar el archivo original con datos en claro para el test
-        try (FileOutputStream outputStream = new FileOutputStream(plainFile)) {
-            String confidentialData = "Grades Record 2026: Sophia=10.0, Marcus=9.5, Pedro=8.0";
-            outputStream.write(confidentialData.getBytes());
-            System.out.println("Plain file created with confidential grades.");
-        } catch (IOException e) {
-            System.err.println("Failed to setup plain file: " + e.getMessage());
-            return;
-        }
-
-        // 2. Ejecutar la encriptación física del archivo en disco
         try {
-            processFileCrypto(Cipher.ENCRYPT_MODE, plainFile, encryptedFile);
-            System.out.println("Encryption complete! File locked at: " + encryptedFile.getName());
-            
-            // Borrar el archivo original para simular un almacenamiento seguro de solo encriptados
-            if (plainFile.delete()) {
-                System.out.println("Plaintext file deleted from local storage.");
+            // 1. Crear un archivo de texto original para la prueba
+            String secretMessage = "Confidential Data: RSA Asymmetric Encryption Test in Java 2026";
+            try (FileOutputStream fos = new FileOutputStream(rawFile)) {
+                fos.write(secretMessage.getBytes(StandardCharsets.UTF_8));
             }
-        } catch (Exception e) {
-            System.err.println("Encryption process crashed: " + e.getMessage());
-        }
+            System.out.println("1. Raw text file created: " + rawFile.getName());
 
-        // 3. Ejecutar la desencriptación para recuperar los datos
-        try {
-            processFileCrypto(Cipher.DECRYPT_MODE, encryptedFile, decryptedFile);
-            System.out.println("Decryption complete! Data restored at: " + decryptedFile.getName());
+            // 2. Generar par de claves RSA de 2048 bits (Clave Pública y Clave Privada)
+            KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+            keyPairGen.initialize(2048);
+            KeyPair keyPair = keyPairGen.generateKeyPair();
             
-            // Leer y mostrar los datos recuperados para verificar el éxito
-            try (FileInputStream inputStream = new FileInputStream(decryptedFile)) {
-                byte[] readBytes = inputStream.readAllBytes();
-                System.out.println("\n--- Decrypted Content Verification ---");
-                System.out.println(new String(readBytes));
+            PublicKey publicKey = keyPair.getPublic();   // Se usa para ENCRIPTAR
+            PrivateKey privateKey = keyPair.getPrivate(); // Se usa para DESENCRIPTAR
+            System.out.println("2. RSA 2048-bit KeyPair generated successfully.");
+
+            // 3. ENCRIPTAR el archivo usando la CLAVE PÚBLICA
+            encryptFile(rawFile, encryptedFile, publicKey);
+            System.out.println("3. File ENCRYPTED with Public Key -> Saved to: " + encryptedFile.getName());
+
+            // 4. DESENCRIPTAR el archivo usando la CLAVE PRIVADA
+            decryptFile(encryptedFile, decryptedFile, privateKey);
+            System.out.println("4. File DECRYPTED with Private Key -> Saved to: " + decryptedFile.getName());
+
+            // 5. Leer y verificar el contenido recuperado
+            try (FileInputStream fis = new FileInputStream(decryptedFile)) {
+                String recoveredText = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
+                System.out.println("--- Recovered Content Verification ---");
+                System.out.println(recoveredText);
             }
+
         } catch (Exception e) {
-            System.err.println("Decryption process crashed: " + e.getMessage());
+            System.err.println("Error during RSA cryptographic processing: " + e.getMessage());
         }
     }
 
     /**
-     * Procesa de forma unificada la encriptación o desencriptación de un archivo en disco.
+     * Encripta un archivo físico utilizando la Clave Pública.
      * 
-     * @param cipherMode El modo de operación (Cipher.ENCRYPT_MODE o Cipher.DECRYPT_MODE)
-     * @param sourceFile El archivo físico de origen con los datos de entrada
-     * @param targetFile El archivo físico de destino donde se guardará el resultado procesado
+     * @param inputFile Fichero en texto plano a cifrar
+     * @param outputFile Fichero de salida cifrado
+     * @param publicKey Clave pública receptora para realizar el cifrado
      */
-    private static void processFileCrypto(int cipherMode, File sourceFile, File targetFile) 
-            throws IOException, GeneralSecurityException {
-        
-        // Crear la clave secreta y configurar el objeto Cipher de Java
-        SecretKeySpec secretKey = new SecretKeySpec(SECRET_KEY_STRING.getBytes(), ALGORITHM);
-        Cipher cipher = Cipher.getInstance(ALGORITHM);
-        cipher.init(cipherMode, secretKey);
+    public static void encryptFile(File inputFile, File outputFile, PublicKey publicKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        processFile(inputFile, outputFile, cipher);
+    }
 
-        // Leer todos los bytes del archivo origen, procesar con AES y escribir al target
+    /**
+     * Desencripta un archivo físico cifrado utilizando la Clave Privada correspondiente.
+     * 
+     * @param inputFile Fichero cifrado
+     * @param outputFile Fichero de salida con el texto restaurado
+     * @param privateKey Clave privada secreta para realizar el descifrado
+     */
+    public static void decryptFile(File inputFile, File outputFile, PrivateKey privateKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        processFile(inputFile, outputFile, cipher);
+    }
+
+    /**
+     * Lee los bytes del fichero de entrada, aplica la transformación con Cipher y escribe en el de salida.
+     */
+    private static void processFile(File inputFile, File outputFile, Cipher cipher) throws IOException, Exception {
         try (
-            FileInputStream inputStream = new FileInputStream(sourceFile);
-            FileOutputStream outputStream = new FileOutputStream(targetFile)
+            FileInputStream inputStream = new FileInputStream(inputFile);
+            FileOutputStream outputStream = new FileOutputStream(outputFile)
         ) {
             byte[] inputBytes = inputStream.readAllBytes();
             byte[] outputBytes = cipher.doFinal(inputBytes);
