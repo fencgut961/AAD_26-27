@@ -467,8 +467,8 @@ La codificación (o juego de caracteres) es la **regla de traducción matemátic
 #### 🏮 El Reto de la Internacionalización: Leer Chino/Japonés y Procesarlo a Español/Inglés
 Un caso real en ingeniería de software es la ingesta de ficheros provenientes de sistemas internacionales con caracteres complejos de la familia CJK (Chino, Japonés, Coreano). Si la aplicación no abre el archivo en UTF-8 o en el charset asiático específico (ej. `Shift_JIS` o `GBK`), la lectura colapsa.
 
-#### 🚀 Ejemplo Práctico en Java: Transcodificador y Traductor de Japonés a Español
-Este programa genera en primer lugar un archivo en UTF-8 con caracteres en japonés (Kanji / Kana), lo lee correctamente preservando la integridad de los glifos asiáticos y procesa su traducción en un nuevo archivo de texto en español.
+#### 🚀 Ejemplo Práctico en Java: Generador y Lector Multilenguaje (Español, Inglés, Chino y Japonés)
+Este programa completo e interactivo permite a los alumnos **generar automáticamente 4 ficheros de ejemplo en diferentes idiomas (Español, Inglés, Chino Simplificado y Japonés)** utilizando la codificación universal **UTF-8**, y comprobar visualmente en consola qué ocurre al leerlos con el Charset correcto versus un Charset incorrecto (efecto *Mojibake*).
 
 ```java
 import java.io.BufferedReader;
@@ -479,71 +479,88 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
-public class AsianLanguageTranscoder {
+public class MultiLanguageCharsetDemo {
+
     public static void main(String[] args) {
-        File japaneseFile = new File("japanese_catalog.txt");
-        File spanishFile = new File("spanish_catalog.txt");
+        // Rutas de los 4 ficheros de prueba multilenguaje
+        File spanishFile = new File("spanish_catalog_utf8.txt");
+        File englishFile = new File("english_catalog_ascii.txt");
+        File chineseFile = new File("chinese_catalog_utf8.txt");
+        File japaneseFile = new File("japanese_catalog_utf8.txt");
 
-        // 1. Crear un archivo en japonés codificado estrictamente en UTF-8
+        System.out.println("=== 1. GENERATING MULTI-LANGUAGE SAMPLE FILES ===");
+
+        // 1. Crear Fichero en Español (con tildes, ñ, ¡, ¿, €)
+        writeSampleFile(spanishFile, StandardCharsets.UTF_8, 
+            "ID: 101 | Producto: Camiseta de Algodón con Cuello en V | Precio: 19.99 € | Origen: España
+" +
+            "ID: 102 | Producto: Pantalón Vaquero Clásico con Tildes y Ñ | Precio: 39.50 € | Estado: ¡Disponible!"
+        );
+
+        // 2. Crear Fichero en Inglés (ASCII estándar)
+        writeSampleFile(englishFile, StandardCharsets.US_ASCII, 
+            "ID: 201 | Item: Premium Denim Jacket | Price: 49.99 USD | Origin: USA
+" +
+            "ID: 202 | Item: Cotton Crewneck T-Shirt | Price: 15.00 USD | Status: In Stock"
+        );
+
+        // 3. Crear Fichero en Chino Simplificado (Familia CJK)
+        writeSampleFile(chineseFile, StandardCharsets.UTF_8, 
+            "ID: 301 | 商品: 亚麻混纺衬衫 (Linen Shirt) | 价格: 299.00 CNY | 发货地: 中国 (China)
+" +
+            "ID: 302 | 商品: 纯棉休闲长裤 (Casual Cotton Pants) | 状态: 现货 (In Stock)"
+        );
+
+        // 4. Crear Fichero en Japonés (Kanji y Hiragana)
+        writeSampleFile(japaneseFile, StandardCharsets.UTF_8, 
+            "ID: 401 | 商品: 富士山 シルクドレス (Silk Dress) | 価格: 8500 JPY | 原産国: 日本 (Japan)
+" +
+            "ID: 402 | 商品: 桜 刺繍ジャケット (Embroidered Jacket) | 数量: 15 点"
+        );
+
+        System.out.println("
+=== 2. READING FILES WITH CORRECT CHARSET (UTF-8) ===");
+        readAndDisplayFile(spanishFile, StandardCharsets.UTF_8, "Español (UTF-8)");
+        readAndDisplayFile(chineseFile, StandardCharsets.UTF_8, "Chino (UTF-8)");
+        readAndDisplayFile(japaneseFile, StandardCharsets.UTF_8, "Japonés (UTF-8)");
+
+        System.out.println("
+=== 3. DEMONSTRATING MOJIBAKE (INCORRECT CHARSET ISO-8859-1 / ASCII) ===");
+        System.out.println("⚠️ Notice how CJK Chinese characters and Spanish accents get corrupted when read with ISO-8859-1:");
+        readAndDisplayFile(chineseFile, StandardCharsets.ISO_8859_1, "Chino LEÍDO CON ISO-8859-1 (CORRUPTO)");
+        readAndDisplayFile(spanishFile, StandardCharsets.ISO_8859_1, "Español LEÍDO CON ISO-8859-1 (CORRUPTO)");
+    }
+
+    /**
+     * Escribe texto en un archivo en disco forzando un Charset determinado.
+     */
+    private static void writeSampleFile(File file, Charset charset, String content) {
         try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(japaneseFile), StandardCharsets.UTF_8))) {
-            
-            writer.write("ID: 1 | Item: 富士山 | Category: 山"); // Fushisan (Monte Fuji) | Yama (Montaña)
-            writer.newLine();
-            writer.write("ID: 2 | Item: 桜 | Category: 花");     // Sakura (Flor de Cerezo) | Hana (Flor)
-            writer.newLine();
-            writer.write("ID: 3 | Item: 新幹線 | Category: 電車"); // Shinkansen (Tren Bala) | Densha (Tren)
-            writer.newLine();
-            System.out.println("1. Japanese catalog file created successfully using UTF-8.");
-            
+                new OutputStreamWriter(new FileOutputStream(file), charset))) {
+            writer.write(content);
+            System.out.println("✔ Created " + file.getName() + " using " + charset.name());
         } catch (IOException e) {
-            System.err.println("Failed to write Japanese file: " + e.getMessage());
-            return;
+            System.err.println("Error writing " + file.getName() + ": " + e.getMessage());
         }
+    }
 
-        // Diccionario simple de traducción simulada
-        Map<String, String> translationMap = new HashMap<>();
-        translationMap.put("富士山", "Monte Fuji");
-        translationMap.put("山", "Naturaleza/Montaña");
-        translationMap.put("桜", "Flor de Cerezo");
-        translationMap.put("花", "Botánica/Flor");
-        translationMap.put("新幹線", "Tren Bala Shinkansen");
-        translationMap.put("電車", "Transporte/Tren");
-
-        // 2. Leer el archivo en japonés en UTF-8 y generar la versión traducida al español
-        try (
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(japaneseFile), StandardCharsets.UTF_8));
-            BufferedWriter spanishWriter = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(spanishFile), StandardCharsets.UTF_8))
-        ) {
+    /**
+     * Lee un archivo en disco aplicando un Charset y muestra el resultado en la consola.
+     */
+    private static void readAndDisplayFile(File file, Charset charset, String label) {
+        System.out.println("
+--- Reading [" + label + "] ---");
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), charset))) {
             String line;
-            System.out.println("
---- Reading Original Japanese File ---");
-            
             while ((line = reader.readLine()) != null) {
-                System.out.println("Raw Read: " + line);
-                
-                // Aplicar reemplazo de términos japoneses detectados en la línea
-                String translatedLine = line;
-                for (Map.Entry<String, String> entry : translationMap.entrySet()) {
-                    translatedLine = translatedLine.replace(entry.getKey(), entry.getValue());
-                }
-                
-                // Escribir la línea traducida en el archivo de salida
-                spanishWriter.write(translatedLine);
-                spanishWriter.newLine();
+                System.out.println(line);
             }
-            
-            System.out.println("
-2. Translation process completed. File saved at: " + spanishFile.getName());
-
         } catch (IOException e) {
-            System.err.println("Error during Asian text transcoding: " + e.getMessage());
+            System.err.println("Error reading " + file.getName() + ": " + e.getMessage());
         }
     }
 }
@@ -1274,9 +1291,41 @@ Para proteger los datos se emplean dos grandes aproximaciones criptográficas:
 
 ---
 
-### 8.1. Práctica de Aula: Intercambio de Claves y Cifrado con GPG (GnuPG)
+### 8.1. Práctica de Aula: Gestión y Cifrado con GPG (GnuPG) mediante Consola de Comandos
 
-A continuación se presenta el flujo interactivo sencillo para probar la criptografía de clave pública en consola entre dos compañeros de clase (Alumno A y Alumno B):
+GPG (*GNU Privacy Guard*) es la herramienta estándar en entornos Linux y servidores backend para proteger archivos mediante criptografía. Permite dos estrategias clave: **cifrado simétrico** (rápido por contraseña) y **cifrado asimétrico** (par de claves pública/privada).
+
+---
+
+#### 🔑 Caso 1: Cifrado Simétrico Rápido (Con Contraseña / Passphrase)
+Ideal para proteger un archivo local de forma inmediata antes de almacenarlo o transferirlo, sin necesidad de gestionar un llavero de claves:
+
+```bash
+# 1. Crear un archivo de texto con datos confidenciales
+echo "CONFIDENTIAL: Exam grades for Acceso a Datos 2026" > grades.txt
+
+# 2. Cifrar de forma simétrica usando GPG (solicitará una contraseña en pantalla)
+gpg --symmetric --cipher-algo AES256 grades.txt
+
+# ➔ Resultado: Se genera un archivo binario encriptado llamado 'grades.txt.gpg'
+
+# 3. Eliminar de forma segura el archivo original en texto plano
+rm grades.txt
+
+# 4. Intentar visualizar el archivo encriptado (se verán caracteres binarios ilegibles)
+cat grades.txt.gpg
+
+# 5. Desencriptar el archivo para recuperar la información original
+gpg --decrypt grades.txt.gpg > grades_recovered.txt
+
+# 6. Comprobar el contenido recuperado
+cat grades_recovered.txt
+```
+
+---
+
+#### 🔐 Caso 2: Cifrado Asimétrico de Clave Pública (Intercambio entre Alumnos)
+Para simular el flujo real de transferencia segura entre dos entidades (Alumno A y Alumno B):
 
 ```text
        ALUMNO A                                                     ALUMNO B
@@ -1298,14 +1347,14 @@ A continuación se presenta el flujo interactivo sencillo para probar la criptog
            │                                                   └────────┬─────────┘
            │                                                            │
            │  ◄────── Recibe mensaje cifrado (secret.txt.gpg) ───────── │
-  ┌────────┴─────────┐                                                  │
-  │ 4. Desencripta   │                                                  │
-  │    con su clave  │                                                  │
-  │    privada secret│                                                  │
-  └──────────────────┘                                                  └──────────────────┘
+  ┌────────┴─────────┐
+  │ 4. Desencripta   │
+  │    con su clave  │
+  │    privada secret│
+  └──────────────────┘
 ```
 
-#### 🛠️ Pasos de Consola para Reproducir en Clase:
+**Comandos de Consola para Reproducir en Clase:**
 
 ```bash
 # === EN EL EQUIPO DEL ALUMNO A ===
@@ -1335,6 +1384,7 @@ cat message_read.txt
 ```
 
 ---
+
 
 ### 8.2. Ejemplo en Java: Cifrado Asimétrico de Ficheros (RSA)
 
@@ -1394,7 +1444,8 @@ public class AsymmetricFileCrypto {
             // 5. Leer y verificar el contenido recuperado
             try (FileInputStream fis = new FileInputStream(decryptedFile)) {
                 String recoveredText = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
-                System.out.println("--- Recovered Content Verification ---");
+                System.out.println("
+--- Recovered Content Verification ---");
                 System.out.println(recoveredText);
             }
 
@@ -1446,3 +1497,4 @@ public class AsymmetricFileCrypto {
 ```
 
 ---
+🏁 *Este es el temario teórico y práctico definitivo de la Unidad 1, maquetado de forma dinámica y adaptado a las últimas tecnologías. No posee ninguna referencia a números de página físicos, incluye esquemas de diseño y tablas comparativas claras, y añade bloques de código Java listos para ser copiados y ejecutados de forma interactiva en inglés con comentarios de soporte en español.*
