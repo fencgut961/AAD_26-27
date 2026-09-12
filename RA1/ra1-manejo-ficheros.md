@@ -2240,503 +2240,600 @@ Podemos resumir el trabajo con ficheros en Java moderno de la siguiente forma:
 > Y cuando trabajamos con recursos abiertos, **try-with-resources** es la forma recomendada de garantizar su cierre.
 
 
-## 6. Jerarquía de Flujos de Datos (*Streams*) y Patrón Decorador
+# 6. Flujos de datos: Streams, Buffers y Patrón Decorador
 
-El canal de comunicación unidireccional entre un programa y un archivo físico se conceptualiza como un **Flujo de Datos (Stream)**. Java clasifica estos flujos según la unidad de información con la que operan:
+Hasta ahora hemos trabajado con archivos utilizando `Path` y `Files`. Ahora vamos a entender **qué ocurre cuando los datos de un archivo entran o salen de nuestro programa**.
 
-```text
-                              ┌────────────────────────┐
-                              │  FLUJOS DE DATOS (I/O) │
-                              └───────────┬────────────┘
-                                          │
-                  ┌───────────────────────┴───────────────────────┐
-                  ▼                                               ▼
-         [ Flujos de Texto ]                             [ Flujos Binarios ]
-     Manejan caracteres de 16 bits.            Manejan bytes crudos de 8 bits.
-     Clases Base: Reader y Writer.         Clases Base: InputStream y OutputStream.
-```
+## 6.1. La idea: los datos tienen que viajar
 
-### 6.1. Flujos de Texto
-Se utilizan de forma exclusiva para interactuar con archivos que albergan caracteres de texto legibles.
+Imaginemos una plataforma de streaming como Twitch.
 
-*   **`FileReader` / `FileWriter`** (Acceso Directo Sin Buffer): Leen o escriben caracteres directamente sobre el disco. Son sencillos de instanciar pero ineficientes si se realizan operaciones continuas de pocos caracteres, ya que provocan llamadas constantes al hardware.
-*   **`BufferedReader` / `BufferedWriter`** (Acceso Optimizado Con Buffer): Envuelven a los flujos directos y añaden una caché en memoria RAM. Permiten operaciones eficientes de alto nivel, como leer el archivo cómodamente línea a línea mediante cadenas de texto o añadir saltos de línea automáticos del sistema operativo.
-
----
-
-### 6.2. Flujos Binarios
-Se utilizan para manipular archivos que contienen secuencias de bytes crudos sin interpretar como texto plano.
-
-*   **`FileInputStream` / `FileOutputStream`** (Acceso Directo Sin Buffer): Leen o escriben bytes de forma directa en el dispositivo de almacenamiento físico.
-*   **`BufferedInputStream` / `BufferedOutputStream`** (Acceso Optimizado Con Buffer): Gestionan lecturas y escrituras binarias masivas agrupando los bytes en bloques de memoria RAM intermedia para proteger el rendimiento de la unidad de almacenamiento.
-
----
-
-### 6.3. Tabla Comparativa de Flujos
-
-| Característica | Flujos de Texto | Flujos Binarios |
-| :--- | :--- | :--- |
-| **Datos Manejados** | Caracteres Unicode (16 bits). | Bytes crudos sin interpretar (8 bits). |
-| **Clases Base** | `Reader` y `Writer`. | `InputStream` y `OutputStream`. |
-| **Uso Común** | Archivos XML, JSON, YAML, CSV y logs de texto. | Imágenes, vídeos, audios, ZIP y ejecutables. |
-| **Gran Ventaja** | Sencilla manipulación y legibilidad directa. | Eficiencia total, compatible con cualquier tipo de dato. |
-| **Inconveniente** | El proceso de codificación puede corromper datos si es erróneo. | Son totalmente ilegibles de forma directa en disco. |
-
----
-
-### 6.4. El Patrón Decorador (Wrapper) en `java.io`: ¿Por qué anidamos flujos?
-Una de las preguntas más frecuentes de los alumnos al aprender Java I/O es: *¿Por qué debo instanciar tres objetos diferentes para leer una simple línea de texto?*
-
-```java
-BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(
-                                new FileInputStream("datos.txt"), StandardCharsets.UTF_8));
-```
-
-La respuesta es el **Patrón de Diseño Decorador (Decorator Pattern)**. En lugar de crear una clase gigante que lo haga todo, Java separa las responsabilidades en capas anidadas ("muñecas matrioshka"):
+Un streamer genera vídeo y ese vídeo tiene que viajar hasta los espectadores:
 
 ```text
-🧩 Ensamblaje de Capas en el Patrón Decorador de java.io:
-
-  ┌────────────────────────────────────────────────────────────────────────┐
-  │ 3. CAPA BUFFEADA (BufferedReader)                                       │
-  │    Agrega la funcionalidad de caché de 8 KB en RAM y readLine().       │
-  │  ┌──────────────────────────────────────────────────────────────────┐  │
-  │  │ 2. CAPA PUENTE DE RECODIFICACIÓN (InputStreamReader)             │  │
-  │  │    Traduce los bytes entrantes a caracteres usando UTF-8.        │  │
-  │  │  ┌────────────────────────────────────────────────────────────┐  │  │
-  │  │  │ 1. CAPA ACCESO FÍSICO (FileInputStream)                    │  │  │
-  │  │  │    Lee la secuencia de bytes crudos del disco.              │  │  │
-  │  │  └────────────────────────────────────────────────────────────┘  │  │
-  │  └──────────────────────────────────────────────────────────────────┘  │
-  └────────────────────────────────────────────────────────────────────────┘
+┌──────────┐          ┌──────────┐          ┌──────────────┐
+│ STREAMER │ ───────► │  TWITCH  │ ───────► │ ESPECTADOR   │
+└──────────┘          └──────────┘          └──────────────┘
+                         DATOS
+                       EN TRÁNSITO
 ```
 
-#### 🚀 Ejemplo Práctico en Java: Demostración paso a paso de la composición del Patrón Decorador
-Este código desacopla las tres capas del patrón decorador para mostrar a los alumnos cómo cada objeto envuelve al anterior añadiendo una nueva responsabilidad.
+En Java ocurre algo parecido cuando trabajamos con archivos:
+
+```text
+┌──────────┐             ┌──────────┐
+│  ARCHIVO │ ───────────► │ PROGRAMA │
+└──────────┘    DATOS    └──────────┘
+                  │
+               STREAM
+```
+
+Un **Stream** es, de forma sencilla, el **flujo por el que circulan los datos** entre un origen y un destino.
+
+También puede ocurrir al contrario:
+
+```text
+┌──────────┐             ┌──────────┐
+│ PROGRAMA │ ───────────► │  ARCHIVO │
+└──────────┘    DATOS    └──────────┘
+                  │
+               STREAM
+```
+
+> **Idea clave:** un Stream no es el archivo. Es el mecanismo que permite transportar los datos.
+
+---
+
+## 6.2. ¿Qué estamos transportando?
+
+Aquí aparece la primera diferencia importante.
+
+Los datos pueden tratarse como **texto** o como **bytes**.
+
+```text
+                         DATOS
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+           TEXTO                      BINARIO
+              │                         │
+        caracteres                    bytes
+              │                         │
+       Reader / Writer        InputStream / OutputStream
+```
+
+### Texto
+
+Cuando trabajamos con información que podemos interpretar como texto:
+
+* `.txt`
+* `.csv`
+* `.json`
+* `.xml`
+
+utilizamos normalmente:
+
+```text
+Reader  ──► leer texto
+Writer  ──► escribir texto
+```
+
+Por ejemplo:
 
 ```java
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+try (BufferedReader reader =
+         Files.newBufferedReader(
+             Path.of("alumnos.csv"),
+             StandardCharsets.UTF_8)) {
 
-public class StreamDecoratorDemo {
-    public static void main(String[] args) {
-        File file = new File("students.csv");
+    String linea;
 
-        if (!file.exists()) {
-            System.out.println("Please generate 'students.csv' first using TextFileProcessor.");
-            return;
-        }
-
-        try {
-            // CAPA 1: Flujo de entrada de bytes crudos desde el soporte físico
-            FileInputStream rawByteStream = new FileInputStream(file);
-            System.out.println("Capa 1: FileInputStream creado (Acceso a bytes crudos del disco).");
-
-            // CAPA 2: Traductor puente de bytes a caracteres con Charset explícito
-            InputStreamReader characterBridgeReader = new InputStreamReader(rawByteStream, StandardCharsets.UTF_8);
-            System.out.println("Capa 2: InputStreamReader envuelve a Capa 1 (Traducción de Charset a UTF-8).");
-
-            // CAPA 3: Almacenamiento intermedio en RAM y métodos de alto nivel
-            BufferedReader bufferedLineReader = new BufferedReader(characterBridgeReader);
-            System.out.println("Capa 3: BufferedReader envuelve a Capa 2 (Añade memoria caché y método readLine()).
-");
-
-            // Leer usando el objeto decorado final
-            String line;
-            System.out.println("--- Reading lines from fully decorated stream ---");
-            while ((line = bufferedLineReader.readLine()) != null) {
-                System.out.println("Line: " + line);
-            }
-
-            // Cerrar la capa exterior cierra automáticamente todas las capas interiores
-            bufferedLineReader.close();
-            System.out.println("
-All stream layers closed safely.");
-
-        } catch (IOException e) {
-            System.err.println("Error in stream decorator pipeline: " + e.getMessage());
-        }
+    while ((linea = reader.readLine()) != null) {
+        log.info("{}", linea);
     }
+}
+```
+
+### Binario
+
+Otros archivos contienen información que no tratamos directamente como caracteres:
+
+* imágenes
+* vídeos
+* archivos comprimidos
+* determinados documentos
+* archivos ejecutables
+
+En estos casos trabajamos con **bytes**:
+
+```text
+InputStream   ──► leer bytes
+OutputStream  ──► escribir bytes
+```
+
+---
+
+## 6.3. ¿Dónde entra el Buffer?
+
+El concepto de **buffer** es más sencillo si volvemos a pensar en streaming.
+
+Cuando vemos un vídeo por Internet, el reproductor puede almacenar temporalmente una pequeña cantidad de datos antes de reproducirlos.
+
+En Java ocurre algo parecido:
+
+```text
+ARCHIVO
+   │
+   ▼
+ STREAM ─────────► [ BUFFER ] ─────────► PROGRAMA
+                      │
+                almacenamiento
+                  temporal
+```
+
+El buffer permite **acumular datos temporalmente y trabajar con ellos en bloques**, reduciendo la cantidad de operaciones de entrada/salida.
+
+Por eso encontramos clases como:
+
+```text
+BufferedReader
+BufferedWriter
+BufferedInputStream
+BufferedOutputStream
+```
+
+El prefijo `Buffered` nos indica que estamos incorporando **buffering** al flujo.
+
+Por ejemplo:
+
+```text
+Reader
+  │
+  ▼
+BufferedReader
+  │
+  ▼
+Programa
+```
+
+Además del buffering, `BufferedReader` proporciona operaciones muy útiles para trabajar con texto, como:
+
+```java
+reader.readLine();
+```
+
+---
+
+## 6.4. ¿Por qué existen tantas clases?
+
+Esta es la parte que suele generar más confusión.
+
+Java no tiene una única clase que haga todo. **Cada componente aporta una responsabilidad concreta y podemos combinarlos.**
+
+Por ejemplo:
+
+```text
+ARCHIVO
+   │
+   │ bytes
+   ▼
+InputStream
+   │
+   │ convierte bytes
+   │ en caracteres
+   ▼
+InputStreamReader
+   │
+   │ añade buffering
+   ▼
+BufferedReader
+   │
+   ▼
+PROGRAMA
+```
+
+Cada pieza tiene una función:
+
+| Componente          | ¿Qué aporta?                     |
+| ------------------- | -------------------------------- |
+| `InputStream`       | Trabajar con bytes               |
+| `InputStreamReader` | Convertir bytes en caracteres    |
+| `BufferedReader`    | Buffer + lectura cómoda de texto |
+
+Por tanto, no tenemos tres clases haciendo lo mismo.
+
+Tenemos **tres capas con responsabilidades diferentes**.
+
+### Una forma sencilla de verlo
+
+```text
+InputStream
+    │
+    └──► "Dame los bytes"
+
+InputStreamReader
+    │
+    └──► "Convierto esos bytes en texto"
+
+BufferedReader
+    │
+    └──► "Además, trabajo de forma eficiente y puedo leer líneas"
+```
+
+Esta composición de objetos nos lleva directamente al patrón **Decorator**.
+
+---
+
+## 6.5. Patrón Decorator
+
+El patrón **Decorator** permite añadir funcionalidades a un objeto **envolviéndolo con otro objeto**.
+
+Visualmente:
+
+```text
+┌──────────────────────────────────┐
+│ BufferedReader                   │
+│  buffer + readLine()             │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │ InputStreamReader          │  │
+│  │ convierte bytes → texto    │  │
+│  │                            │  │
+│  │  ┌──────────────────────┐  │  │
+│  │  │ InputStream          │  │  │
+│  │  │ proporciona bytes    │  │  │
+│  │  └──────────────────────┘  │  │
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+```
+
+En código:
+
+```java
+BufferedReader reader =
+    new BufferedReader(
+        new InputStreamReader(
+            Files.newInputStream(archivo),
+            StandardCharsets.UTF_8
+        )
+    );
+```
+
+Podemos verlo simplemente como:
+
+```text
+InputStream
+     ↓
+   + texto
+     ↓
+InputStreamReader
+     ↓
+   + buffer
+     ↓
+BufferedReader
+```
+
+> **No necesitamos memorizar esta construcción.** Lo importante es entender que podemos ir añadiendo funcionalidades mediante capas.
+
+---
+
+## 6.6. La forma moderna de hacerlo
+
+En aplicaciones actuales normalmente **no necesitamos construir manualmente todas esas capas**.
+
+La API `Files` nos proporciona métodos que ya realizan esta configuración por nosotros.
+
+Para leer texto:
+
+```java
+Path archivo = Path.of("alumnos.csv");
+
+try (BufferedReader reader =
+         Files.newBufferedReader(
+             archivo,
+             StandardCharsets.UTF_8)) {
+
+    String linea;
+
+    while ((linea = reader.readLine()) != null) {
+        log.info("{}", linea);
+    }
+
+} catch (IOException e) {
+    log.error("Error al leer {}", archivo, e);
+}
+```
+
+Aquí:
+
+```text
+Files.newBufferedReader()
+          │
+          ▼
+   BufferedReader
+          │
+          ▼
+     leer líneas
+```
+
+La ventaja es que podemos trabajar directamente con la API moderna de `Files` sin preocuparnos de construir manualmente todas las capas.
+
+Para escribir texto ocurre algo equivalente:
+
+```java
+try (BufferedWriter writer =
+         Files.newBufferedWriter(
+             Path.of("salida.txt"),
+             StandardCharsets.UTF_8)) {
+
+    writer.write("Hola mundo");
+
+} catch (IOException e) {
+    log.error("Error al escribir el archivo", e);
 }
 ```
 
 ---
 
-### 6.5. Optimización mediante el Patrón Buffering (Almacenamiento Intermedio)
-La interacción física directa con unidades de disco para escribir o leer datos de uno en uno es extremadamente ineficiente.
+## 6.7. Resumen
+
+Todo el apartado puede resumirse en esta idea:
 
 ```text
-  Lectura Sin Buffer: (Petición constante al disco físico - Lento)
-  Programa Java <====== (Petición de 1 Byte) ======> Disco Físico (SSD/HDD)
-
-  Lectura Con Buffer: (Lectura en bloques a memoria intermedia RAM - Rápido)
-  Programa Java <== (Servicio instantáneo en RAM) == Buffer (8 KB) <== (Volcado físico) == Disco Físico
+                         DATOS
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+            TEXTO                    BINARIO
+              │                         │
+       Reader / Writer        InputStream / OutputStream
+              │                         │
+              └────────────┬────────────┘
+                           │
+                        BUFFER
+                           │
+                           ▼
+                    FLUJO DE DATOS
+                           │
+                           ▼
+                     PROGRAMA
 ```
 
-Para mitigar esta penalización, las clases con Buffer actúan de la siguiente manera:
-*   **Lectura con Buffer**: En lugar de solicitar al disco un solo byte a la vez, el buffer realiza una petición física masiva de un bloque de datos sustancial (por ejemplo, 8 Kilobytes de una sola vez) y los almacena en la memoria RAM rápida. Las sucesivas lecturas del programa se sirven instantáneamente de la RAM, acelerando el rendimiento general de forma exponencial.
-*   **Escritura con Buffer**: El buffer retiene de manera temporal las escrituras en la memoria volátil del sistema y solo ejecuta la costosa operación de volcado físico en disco (*flush*) de forma masiva cuando el buffer se satura o se ordena el cierre definitivo del flujo.
-
-#### 🚀 Ejemplo Práctico en Java: Copia eficiente de archivos binarios utilizando Buffers físicos
-Este código muestra cómo clonar una imagen en disco procesando sus bytes de forma masiva a través de almacenamiento intermedio para garantizar la máxima velocidad.
-
-```java
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-
-public class BinaryFileCopier {
-    public static void main(String[] args) {
-        File source = new File("image.jpg");
-        File destination = new File("image_copy.jpg");
-        
-        if (!source.exists()) {
-            System.out.println("Please provide 'image.jpg' to execute the copy test.");
-            return;
-        }
-        
-        // Inicializar flujos binarios con buffer intermedio
-        try (
-            BufferedInputStream reader = new BufferedInputStream(new FileInputStream(source));
-            BufferedOutputStream writer = new BufferedOutputStream(new FileOutputStream(destination))
-        ) {
-            byte[] cacheBuffer = new byte[4096]; // Buffer de transferencia masiva de 4 KB
-            int bytesTransferred;
-            
-            // Leer y escribir bloques de bytes hasta alcanzar el final del archivo
-            while ((bytesTransferred = reader.read(cacheBuffer)) != -1) {
-                writer.write(cacheBuffer, 0, bytesTransferred);
-            }
-            
-            System.out.println("Binary file copied successfully with high performance.");
-            
-        } catch (IOException e) {
-            System.err.println("Copy failed due to physical disk error: " + e.getMessage());
-        }
-    }
-}
-```
-
----
-
-## 7. Clases con Recodificación de Caracteres
-
-Cuando un programa interactúa con un archivo de texto en disco, debe realizar obligatoriamente un proceso de traducción bidireccional entre la secuencia binaria de almacenamiento físico y la representación tipográfica de los caracteres Unicode que maneja internamente la memoria RAM del sistema:
+Y cuando necesitamos combinar funcionalidades:
 
 ```text
-                     ┌─────────────────────────────┐
-                     │   Bytes físicos en disco    │
-                     └──────────────┬──────────────┘
-                                    │
-                                    ▼
-                     ┌─────────────────────────────┐
-                     │     InputStreamReader       │
-                     │  (Aplica regla de Charset)  │
-                     └──────────────┬──────────────┘
-                                    │
-                                    ▼
-                     ┌─────────────────────────────┐
-                     │       BufferedReader        │
-                     │  (Lectura de líneas en RAM) │
-                     └──────────────┬──────────────┘
-                                    │
-                                    ▼
-                     ┌─────────────────────────────┐
-                     │     Caracteres Unicode      │
-                     └─────────────────────────────┘
+┌──────────────┐
+│   BUFFER     │
+│      ↓       │
+│   TEXTO      │
+│      ↓       │
+│   BYTES      │
+└──────────────┘
+       │
+       ▼
+   DECORATOR
 ```
 
-Para coordinar este proceso de forma segura sin riesgo de caracteres corruptos, se utilizan clases puente de conversión especializadas:
-*   **`InputStreamReader`**: Actúa como un traductor que toma un flujo de bytes binarios entrantes (`InputStream`) y los transforma de forma dinámica en caracteres legibles bajo una codificación o juego de caracteres específico.
-*   **`OutputStreamWriter`**: Realiza el proceso inverso; toma caracteres Unicode de la memoria del programa y los codifica en la secuencia de bytes binarios correspondiente al charset de destino al escribir físicamente en disco.
+### Qué debemos recordar
 
-💡 **Directriz de Diseño**: Si se omite especificar de forma explícita el juego de caracteres en los flujos puente, la máquina virtual recurrirá de manera silenciosa a la configuración por defecto de la plataforma local. Esto compromete gravemente la portabilidad del sistema al migrar el código entre servidores con diferentes sistemas operativos. **Especificar siempre constantes explícitas y seguras en la recodificación (como `StandardCharsets.UTF_8`) es un requisito indispensable en el desarrollo de software profesional**.
+* **Stream** → flujo de datos entre un origen y un destino.
+* **Reader / Writer** → trabajan con texto.
+* **InputStream / OutputStream** → trabajan con bytes.
+* **Buffer** → almacenamiento temporal que mejora la gestión del flujo.
+* **Decorator** → permite añadir funcionalidades envolviendo objetos.
+* **`Files`** → proporciona una forma moderna y sencilla de trabajar con estos flujos.
 
-#### 🚀 Ejemplo Práctico en Java: Recodificación y transcodificación física de archivos
-Este código lee un archivo codificado originalmente en formato UTF-8 y genera de manera simultánea dos copias de seguridad en codificaciones diferentes (UTF-16 e ISO-8859-1), demostrando el puente bidireccional de caracteres.
+En la práctica, para trabajar con archivos de texto, normalmente utilizaremos directamente:
 
 ```java
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-public class EncodingTranscoder {
-    public static void main(String[] args) {
-        File sourceFile = new File("students.csv");
-        File utf16OutputFile = new File("students_utf16.csv");
-        File isoOutputFile = new File("students_iso.csv");
-        
-        if (!sourceFile.exists()) {
-            System.out.println("Please run 'TextFileProcessor' first to generate 'students.csv'.");
-            return;
-        }
-        
-        // Encadenar clases puente especificando el conjunto de caracteres explícito
-        try (
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(sourceFile), StandardCharsets.UTF_8));
-            BufferedWriter utf16Writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(utf16OutputFile), StandardCharsets.UTF_16));
-            BufferedWriter isoWriter = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(isoOutputFile), "ISO-8859-1"))
-        ) {
-            String currentLine;
-            
-            // Leer en UTF-8 y volcar transcodificando de forma simultánea en ambos formatos
-            while ((currentLine = reader.readLine()) != null) {
-                // Escribir en la copia UTF-16
-                utf16Writer.write(currentLine);
-                utf16Writer.newLine();
-                
-                // Escribir en la copia ISO-8859-1
-                isoWriter.write(currentLine);
-                isoWriter.newLine();
-            }
-            
-            System.out.println("Transcoding completed successfully.");
-            System.out.println("Generated File 1: students_utf16.csv (UTF-16 encoding)");
-            System.out.println("Generated File 2: students_iso.csv (ISO-8859-1 encoding)");
-            
-        } catch (IOException e) {
-            System.err.println("Transcoding failed: " + e.getMessage());
-        }
-    }
-}
+Files.newBufferedReader(...)
+Files.newBufferedWriter(...)
 ```
 
----
-
-## 8. Seguridad y Confidencialidad: Encriptación de Ficheros
-
-En entornos profesionales de desarrollo y administración de sistemas, **la persistencia y la transmisión de datos sensibles exige mecanismos de protección criptográfica**. Almacenar contraseñas, credenciales de conexión, datos personales o registros corporativos en texto plano en el sistema de archivos supone un grave riesgo de seguridad.
-
-Para proteger los datos se emplean dos grandes aproximaciones criptográficas:
-1.  **Criptografía Simétrica**: Utiliza una única **clave compartida** (o frase de paso) tanto para encriptar como para desencriptar. Es idónea para cifrar grandes volúmenes de datos locales con alta velocidad. El algoritmo estándar es **AES (Advanced Encryption Standard)**.
-2.  **Criptografía Asimétrica (o de Clave Pública)**: Utiliza una pareja de claves vinculadas matemáticamente:
-    *   **Clave Pública**: Se comparte libremente con los compañeros o sistemas externos. Cualquiera puede usarla para **encriptar** un archivo o mensaje dirigido a nosotros.
-    *   **Clave Privada**: Se mantiene en estricto secreto. Es la **única** capaz de **desencriptar** los archivos cifrados con su correspondiente clave pública.
-    *   El estándar de referencia en la industria es **RSA / OpenPGP (GnuPG)**.
+sin necesidad de construir manualmente todas las capas.
 
 ---
 
-### 8.1. Práctica de Aula: Gestión y Cifrado con GPG (GnuPG) mediante Consola de Comandos
+# 7. Seguridad y confidencialidad: cifrado de ficheros
 
-GPG (*GNU Privacy Guard*) es la herramienta estándar en entornos Linux y servidores backend para proteger archivos mediante criptografía. Permite dos estrategias clave: **cifrado simétrico** (rápido por contraseña) y **cifrado asimétrico** (par de claves pública/privada).
+En el desarrollo de aplicaciones y la administración de sistemas trabajamos con información que puede ser sensible: datos personales, documentos, credenciales, copias de seguridad, etc.
+
+El **cifrado** permite proteger esta información transformándola en un formato que no puede ser interpretado sin la clave correspondiente.
+
+```text
+📄 Información original
+        │
+        │ 🔐 CIFRAR
+        ▼
+📦 Información cifrada
+        │
+        │ 🔓 DESCIFRAR
+        ▼
+📄 Información original
+```
+
+Existen dos formas principales de cifrado:
+
+* **Cifrado simétrico:** utiliza una misma clave para cifrar y descifrar.
+* **Cifrado asimétrico:** utiliza una clave pública y una clave privada.
 
 ---
 
-#### 🔑 Caso 1: Cifrado Simétrico Rápido (Con Contraseña / Passphrase)
-Ideal para proteger un archivo local de forma inmediata antes de almacenarlo o transferirlo, sin necesidad de gestionar un llavero de claves:
+## 7.1. Cifrado simétrico
+
+En el **cifrado simétrico**, la misma clave se utiliza para cifrar y descifrar la información.
+
+```text
+              🔑 CLAVE
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+     🔐 CIFRAR         🔓 DESCIFRAR
+```
+
+Es un método rápido y resulta adecuado para proteger ficheros.
+
+### Ejemplo. Cifrado simétrico con GPG
+
+Vamos a crear un fichero de prueba:
 
 ```bash
-# 1. Crear un archivo de texto con datos confidenciales
-echo "CONFIDENTIAL: Exam grades for Acceso a Datos 2026" > grades.txt
-
-# 2. Cifrar de forma simétrica usando GPG (solicitará una contraseña en pantalla)
-gpg --symmetric --cipher-algo AES256 grades.txt
-
-# ➔ Resultado: Se genera un archivo binario encriptado llamado 'grades.txt.gpg'
-
-# 3. Eliminar de forma segura el archivo original en texto plano
-rm grades.txt
-
-# 4. Intentar visualizar el archivo encriptado (se verán caracteres binarios ilegibles)
-cat grades.txt.gpg
-
-# 5. Desencriptar el archivo para recuperar la información original
-gpg --decrypt grades.txt.gpg > grades_recovered.txt
-
-# 6. Comprobar el contenido recuperado
-cat grades_recovered.txt
+echo "Este es un mensaje confidencial." > mensaje.txt
 ```
 
----
-
-#### 🔐 Caso 2: Cifrado Asimétrico de Clave Pública (Intercambio entre Alumnos)
-Para simular el flujo real de transferencia segura entre dos entidades (Alumno A y Alumno B):
-
-```text
-       ALUMNO A                                                     ALUMNO B
-  ┌──────────────────┐                                         ┌──────────────────┐
-  │ 1. Genera par de │                                         │ 1. Genera par de │
-  │    claves GPG    │                                         │    claves GPG    │
-  └────────┬─────────┘                                         └────────┬─────────┘
-           │                                                            │
-           │  ──────── Envía su Clave Pública (student_a.key) ────────► │
-           │                                                            │
-           │                                                   ┌────────┴─────────┐
-           │                                                   │ 2. Importa clave │
-           │                                                   │    pública de A  │
-           │                                                   └────────┬─────────┘
-           │                                                            │
-           │                                                   ┌────────┴─────────┐
-           │                                                   │ 3. Cifra archivo │
-           │                                                   │    con clave de A│
-           │                                                   └────────┬─────────┘
-           │                                                            │
-           │  ◄────── Recibe mensaje cifrado (secret.txt.gpg) ───────── │
-  ┌────────┴─────────┐
-  │ 4. Desencripta   │
-  │    con su clave  │
-  │    privada secret│
-  └──────────────────┘
-```
-
-**Comandos de Consola para Reproducir en Clase:**
+Lo ciframos utilizando GPG:
 
 ```bash
-# === EN EL EQUIPO DEL ALUMNO A ===
-# 1. Generar la pareja de claves criptográficas (pública y privada)
-gpg --generate-key
+gpg --symmetric --cipher-algo AES256 mensaje.txt
+```
 
-# 2. Exportar la clave pública a un archivo para enviársela al Alumno B
-gpg --output student_a_public.key --export student.a@school.com
+GPG solicitará una contraseña y generará:
 
-# === EN EL EQUIPO DEL ALUMNO B ===
-# 3. Importar la clave pública recibida del Alumno A
-gpg --import student_a_public.key
+```text
+mensaje.txt.gpg
+```
 
-# 4. Crear un archivo con un mensaje secreto para el Alumno A
-echo "Hola Alumno A, este mensaje solo lo puedes leer tú con tu clave privada." > secret_message.txt
+Para recuperar el fichero:
 
-# 5. Cifrar el archivo usando la CLAVE PÚBLICA del Alumno A
-gpg --recipient student.a@school.com --encrypt secret_message.txt
-# ➔ Genera el archivo encriptado 'secret_message.txt.gpg' que se envía al Alumno A
+```bash
+gpg --decrypt mensaje.txt.gpg > mensaje_recuperado.txt
+```
 
-# === EN EL EQUIPO DEL ALUMNO A ===
-# 6. Desencriptar el archivo recibido utilizando SU CLAVE PRIVADA
-gpg --decrypt secret_message.txt.gpg > message_read.txt
+GPG solicitará de nuevo la contraseña.
 
-# 7. Verificar el contenido desencriptado
-cat message_read.txt
+El proceso es:
+
+```text
+📄 mensaje.txt
+      │
+      │ 🔑 contraseña
+      ▼
+📦 mensaje.txt.gpg
+      │
+      │ 🔑 misma contraseña
+      ▼
+📄 mensaje_recuperado.txt
+```
+
+La documentación de GnuPG define `--symmetric` como el cifrado mediante una contraseña; podemos indicar explícitamente AES-256 con `--cipher-algo AES256`.
+
+---
+
+## 7.2. Cifrado asimétrico
+
+El **cifrado asimétrico** utiliza un par de claves:
+
+* 🔓 **Clave pública:** se puede compartir.
+* 🔐 **Clave privada:** debe mantenerse en secreto.
+
+```text
+🔓 Clave pública  → CIFRAR
+
+🔐 Clave privada  → DESCIFRAR
+```
+
+La ventaja es que no necesitamos compartir una contraseña secreta.
+
+Por ejemplo, si A quiere enviar un fichero a B:
+
+```text
+A                              B
+
+📄 mensaje.txt
+      │
+      │ 🔓 Pública de B
+      ▼
+   🔐 CIFRAR
+      │
+      ▼
+📦 mensaje cifrado
+      │
+      └──────────────►
+                              │
+                              │ 🔐 Privada de B
+                              ▼
+                           🔓 DESCIFRAR
+                              │
+                              ▼
+                         📄 mensaje.txt
+```
+
+**A utiliza la clave pública de B y B utiliza su propia clave privada.**
+
+---
+
+### Ejemplo. Crear y utilizar claves con Kleopatra
+
+Para practicar el cifrado asimétrico utilizaremos **Kleopatra Neo**, disponible en [kleopatra.app](https://kleopatra.app/). La herramienta permite generar pares de claves OpenPGP, importar y exportar claves y cifrar y descifrar mensajes.
+
+#### 1. Generar el par de claves
+
+Cada alumno genera su propio par:
+
+```text
+👤 Alumno
+
+🔓 Clave pública
+🔐 Clave privada
+```
+
+La **clave pública se puede compartir**.
+
+La **clave privada no se comparte**.
+
+### 2. Cifrar un mensaje
+
+Creamos un mensaje para un compañero.
+
+Seleccionamos su **clave pública** y ciframos el mensaje.
+
+```text
+📄 mensaje.txt
+      │
+      │ 🔓 Pública del compañero
+      ▼
+📦 mensaje cifrado
+```
+
+Le enviamos el mensaje cifrado.
+
+#### 3. Descifrar el mensaje
+
+El compañero utiliza **su clave privada** para recuperar el contenido:
+
+```text
+📦 mensaje cifrado
+      │
+      │ 🔐 Mi clave privada
+      ▼
+📄 mensaje original
 ```
 
 ---
 
+### Ejemplo. Compartir las claves.
 
-### 8.2. Ejemplo en Java: Cifrado Asimétrico de Ficheros (RSA)
+Vamos a realizar el proceso completo entre dos o más alumnos.
 
-Para comprender cómo funciona el cifrado de clave pública dentro de una aplicación Java, implementaremos un ejemplo autónomo y sencillo (`AsymmetricFileCrypto.java`). 
+```text
+👨‍💻 ALUMNO A                    👩‍💻 ALUMNO B
 
-El programa:
-1. Genera un par de claves **RSA (Pública y Privada)** de 2048 bits.
-2. Utiliza la **Clave Pública** para cifrar un archivo de texto (`secret_raw.txt`), generando el fichero protegido (`secret_encrypted.enc`).
-3. Utiliza la **Clave Privada** para descifrar el fichero (`secret_encrypted.enc`), recuperando los datos originales en (`secret_decrypted.txt`).
+🔓 Pública A  ◄──────────────►  🔓 Pública B
 
-#### 🚀 Código Completo en Java: `AsymmetricFileCrypto.java`
-
-```java
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import javax.crypto.Cipher;
-
-public class AsymmetricFileCrypto {
-
-    public static void main(String[] args) {
-        File rawFile = new File("secret_raw.txt");
-        File encryptedFile = new File("secret_encrypted.enc");
-        File decryptedFile = new File("secret_decrypted.txt");
-
-        try {
-            // 1. Crear un archivo de texto original para la prueba
-            String secretMessage = "Confidential Data: RSA Asymmetric Encryption Test in Java 2026";
-            try (FileOutputStream fos = new FileOutputStream(rawFile)) {
-                fos.write(secretMessage.getBytes(StandardCharsets.UTF_8));
-            }
-            System.out.println("1. Raw text file created: " + rawFile.getName());
-
-            // 2. Generar par de claves RSA de 2048 bits (Clave Pública y Clave Privada)
-            KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
-            keyPairGen.initialize(2048);
-            KeyPair keyPair = keyPairGen.generateKeyPair();
-            
-            PublicKey publicKey = keyPair.getPublic();   // Se usa para ENCRIPTAR
-            PrivateKey privateKey = keyPair.getPrivate(); // Se usa para DESENCRIPTAR
-            System.out.println("2. RSA 2048-bit KeyPair generated successfully.");
-
-            // 3. ENCRIPTAR el archivo usando la CLAVE PÚBLICA
-            encryptFile(rawFile, encryptedFile, publicKey);
-            System.out.println("3. File ENCRYPTED with Public Key -> Saved to: " + encryptedFile.getName());
-
-            // 4. DESENCRIPTAR el archivo usando la CLAVE PRIVADA
-            decryptFile(encryptedFile, decryptedFile, privateKey);
-            System.out.println("4. File DECRYPTED with Private Key -> Saved to: " + decryptedFile.getName());
-
-            // 5. Leer y verificar el contenido recuperado
-            try (FileInputStream fis = new FileInputStream(decryptedFile)) {
-                String recoveredText = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
-                System.out.println("
---- Recovered Content Verification ---");
-                System.out.println(recoveredText);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Error during RSA cryptographic processing: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Encripta un archivo físico utilizando la Clave Pública.
-     * 
-     * @param inputFile Fichero en texto plano a cifrar
-     * @param outputFile Fichero de salida cifrado
-     * @param publicKey Clave pública receptora para realizar el cifrado
-     */
-    public static void encryptFile(File inputFile, File outputFile, PublicKey publicKey) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        processFile(inputFile, outputFile, cipher);
-    }
-
-    /**
-     * Desencripta un archivo físico cifrado utilizando la Clave Privada correspondiente.
-     * 
-     * @param inputFile Fichero cifrado
-     * @param outputFile Fichero de salida con el texto restaurado
-     * @param privateKey Clave privada secreta para realizar el descifrado
-     */
-    public static void decryptFile(File inputFile, File outputFile, PrivateKey privateKey) throws Exception {
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        processFile(inputFile, outputFile, cipher);
-    }
-
-    /**
-     * Lee los bytes del fichero de entrada, aplica la transformación con Cipher y escribe en el de salida.
-     */
-    private static void processFile(File inputFile, File outputFile, Cipher cipher) throws IOException, Exception {
-        try (
-            FileInputStream inputStream = new FileInputStream(inputFile);
-            FileOutputStream outputStream = new FileOutputStream(outputFile)
-        ) {
-            byte[] inputBytes = inputStream.readAllBytes();
-            byte[] outputBytes = cipher.doFinal(inputBytes);
-            outputStream.write(outputBytes);
-        }
-    }
-}
+🔐 Privada A                    🔐 Privada B
+    ❌                              ❌
+ NO SE COMPARTE                 NO SE COMPARTE
 ```
 
+1. Cada alumno genera su par de claves.
+2. Intercambian únicamente las **claves públicas**.
+3. A crea un mensaje y lo cifra con la **clave pública de B**.
+4. A envía el mensaje cifrado a B.
+5. B lo descifra con **su clave privada**.
+6. Se repite el proceso en sentido contrario.
+
+#### Idea clave
+
+> **La clave pública se comparte. La clave privada se mantiene en secreto. Para enviar un mensaje cifrado a una persona utilizamos su clave pública; esa persona lo descifra con su clave privada.**
+
 ---
-🏁 *Este es el temario teórico y práctico definitivo de la Unidad 1, maquetado de forma dinámica y adaptado a las últimas tecnologías. No posee ninguna referencia a números de página físicos, incluye esquemas de diseño y tablas comparativas claras, y añade bloques de código Java listos para ser copiados y ejecutados de forma interactiva en inglés con comentarios de soporte en español.*
