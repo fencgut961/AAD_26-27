@@ -2832,8 +2832,6 @@ Vamos a realizar el proceso completo entre dos o más alumnos.
 5. B lo descifra con **su clave privada**.
 6. Se repite el proceso en sentido contrario.
 
-#### Idea clave
-
 > **La clave pública se comparte. La clave privada se mantiene en secreto. Para enviar un mensaje cifrado a una persona utilizamos su clave pública; esa persona lo descifra con su clave privada.**
 
 ---
