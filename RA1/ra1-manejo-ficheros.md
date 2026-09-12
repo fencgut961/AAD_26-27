@@ -75,8 +75,8 @@ La interacción del software con los datos almacenados ha pasado por tres grande
   │ 2  │ Pedro Almodovar│ CLERK        │ 1350.00│     sin escanear la tabla entera.
   └────┴────────────────┴──────────────┴────────┘
 
-🗂️ Ejemplo de Índice B-Tree por ID: El B-Tree organiza los valores del índice en forma de árbol para localizar rápidamente los datos sin necesidad de recorrer toda la tabla.
-
+🗂️ Ejemplo de Índice B-Tree por ID: El B-Tree organiza los valores del índice en forma de árbol
+                                     para localizar rápidamente los datos sin necesidad de recorrer toda la tabla.
                  [ 4 ]
                 /     \
              [2, 3]   [6, 7]
@@ -94,25 +94,51 @@ La interacción del software con los datos almacenados ha pasado por tres grande
 ```
 [Simulador de árboles B](https://meskeia.com/simulador-arboles-b/)
 
-3.  **Era de la Interconectividad y el Big Data**: Con la expansión de Internet y la comunicación entre sistemas heterogéneos, los ficheros volvieron a cobrar protagonismo como formato estándar de intercambio. Surgieron formatos universales legibles por humanos (CSV, XML, JSON, YAML). Además, la explosión del Big Data implicó trabajar con volúmenes masivos de datos en sistemas de archivos distribuidos (como HDFS en Hadoop) o almacenes de objetos en la nube (como Amazon S3, Google Cloud Storage o Azure Blob Storage) accesibles mediante APIs.
+3.  **Era de la Interconectividad y el Big Data**: Con la expansión de Internet y la comunicación entre sistemas heterogéneos, los ficheros volvieron a cobrar protagonismo como formato estándar de intercambio. Surgieron formatos universales legibles por humanos (CSV, XML, JSON, YAML). Además, la explosión del Big Data implicó trabajar con volúmenes masivos de datos en sistemas de archivos distribuidos (como Hadoop Distributed File System [HDFS] en Hadoop) o almacenes de objetos en la nube (como Amazon S3, Google Cloud Storage o Azure Blob Storage) accesibles mediante APIs.
 
 ```text
-🌐 Ejemplo de Formatos Universales de Intercambio (Misma información):
+🌐 Ejemplo de Formatos Universales de Intercambio: Misma información, diferentes representaciones
 
-  JSON (Web & APIs REST):               YAML (Configuraciones Microservicios):
-  {                                     employee:
-    "id": 1,                              id: 1
-    "name": "Clara Oswald",               name: Clara Oswald
-    "role": "SHOP_MANAGER",               role: SHOP_MANAGER
-    "salary": 2550.00                     salary: 2550.00
-  }
-
-  CSV (Tabular Plano):                  XML (Sistemas Legados Enterprise):
-  id,name,role,salary                   <employee>
-  1,"Clara Oswald",SHOP_MANAGER,2550.00   <id>1</id><name>Clara Oswald</name>
-                                        </employee>
-```
-
+┌────────────────────────────────────┐      ┌────────────────────────────────────┐
+│ JSON                               │      │ YAML                               │
+│ Web & APIs REST                    │      │ Configuraciones                    │
+│                                    │      │                                    │
+│ {                                  │      │ employees:                         │
+│   "employees": [                   │      │                                    │
+│                                    │      │   - id: 1                          │
+│     {                              │      │     name: Clara Oswald             │
+│       "id": 1,                     │      │     role: SHOP_MANAGER             │
+│       "name": "Clara Oswald",      │      │     salary: 2550.00                │
+│       "role": "SHOP_MANAGER",      │      │                                    │
+│       "salary": 2550.00            │      │   - id: 2                          │
+│     },                             │      │     name: Pedro Almodovar          │
+│                                    │      │     role: CLERK                    │
+│     {                              │      │     salary: 1350.00                │
+│       "id": 2,                     │      │                                    │
+│       "name": "Pedro Almodovar",   │      │   ...                              │
+│       "role": "CLERK",             │      │                                    │
+│       "salary": 1350.00            │      │                                    │
+│     }                              │      │                                    │
+│                                    │      │                                    │
+│   ]                                │      │                                    │
+│ }                                  │      │                                    │
+└────────────────────────────────────┘      └────────────────────────────────────┘
+┌────────────────────────────────────┐      ┌────────────────────────────────────┐
+│ CSV                                │      │ XML                                │
+│ Tabular / Plano                    │      │ Sistemas Legacy                    │
+│                                    │      │                                    │
+│ id,name,role,salary                │      │ <employees>                        │
+│ 1,Clara Oswald,SHOP_MANAGER,2550   │      │                                    │
+│ 2,Pedro Almodovar,CLERK,1350       │      │   <employee>                       │
+│ 3,Jara Li,SHOP_MANAGER,2550        │      │     <id>1</id>                     │
+│ 4,Bruce Wayne,CEO,5200             │      │     <name>Clara Oswald</name>      │
+│                                    │      │     <role>SHOP_MANAGER</role>      │
+│ ...                                │      │     <salary>2550.00</salary>       │
+│                                    │      │   </employee>                      │
+│                                    │      │                                    │
+│                                    │      │   ...                              │
+│                                    │      │ </employees>                       │
+└────────────────────────────────────┘      └────────────────────────────────────┘
 ---
 
 ### 1.3. Áreas de Aplicación Actual de los Ficheros
