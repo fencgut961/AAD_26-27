@@ -12,7 +12,7 @@ Un fichero (o archivo) es una **unidad lógica de almacenamiento** de informaci�
 ```text
   👤 NIVEL DE USUARIO (Abstracción Lógica)
   ┌─────────────────────────────────────────────────────────────────┐
-  │ "alumnos.csv" ➔ Archivo estructurado con filas de texto.        │
+  │ "alumnos.csv" ➔ Archivo estructurado con filas de texto.       │
   └────────────────────────────────┬────────────────────────────────┘
                                    ▼
   💻 NIVEL DE SISTEMA OPERATIVO (Metadatos y Organización)
@@ -24,7 +24,7 @@ Un fichero (o archivo) es una **unidad lógica de almacenamiento** de informaci�
                                    ▼
   💾 NIVEL DE HARDWARE (Estructura Física de Bajo Nivel)
   ┌─────────────────────────────────────────────────────────────────┐
-  │ [01001001 01000100 00101100 01001110 01101111 01101101...]       │
+  │ [01001001 01000100 00101100 01001110 01101111 01101101...]      │
   │ Secuencia física e ininterrumpida de bytes en sectores de disco.│
   └─────────────────────────────────────────────────────────────────┘
 ```
@@ -46,7 +46,7 @@ La interacción del software con los datos almacenados ha pasado por tres grande
  ┌────────────────────────┐      ┌────────────────────────┐      ┌────────────────────────┐
  │   FICHEROS PLANOS      │      │   BASES DE DATOS (SQL) │      │   SISTEMAS HÍBRIDOS    │
  ├────────────────────────┤      ├────────────────────────┤      ├────────────────────────┤
- │ • Acceso lineal/rígido │ ➔    │ • Estructura en tablas │ ➔    │ • JSON, YAML, XML, CSV │
+ │ • Acceso lineal/rígido │   ➔ │ • Estructura en tablas │  ➔  │ • JSON, YAML, XML, CSV │
  │ • COBOL y FORTRAN      │      │ • Transacciones ACID   │      │ • Almacén de objetos   │
  │ • Sin índices globales │      │ • Consultas complejas  │      │ • Big Data y Logs      │
  └────────────────────────┘      └────────────────────────┘      └────────────────────────┘
@@ -57,13 +57,13 @@ La interacción del software con los datos almacenados ha pasado por tres grande
 ```text
 📄 Ejemplo de Registro en Fichero Plano (Longitud Fija COBOL/DAT):
   Posición de Bytes: [0...3] [4...............23] [24............38] [39......46]
-  Campos Fijos:      [ ID ]  [      Nombre      ] [     Puesto      ] [  Salario ]
-  Registro 1:        0001    Clara Oswald         Shop Manager    02550.00
-  Registro 2:        0002    Pedro Almodovar      Clerk           01350.00
+  Campos Fijos:      [ ID  ] [      Nombre      ] [     Puesto     ] [  Salario ]
+  Registro 1:        0001    Clara Oswald         Shop Manager       02550.00
+  Registro 2:        0002    Pedro Almodovar      Clerk              01350.00
   ➔ Inconveniente: Para buscar al empleado 2, el sistema debe leer obligatoriamente los 47 bytes del Registro 1.
 ```
 
-2.  **Era de las Bases de Datos Relacionales (RDBMS)**: Sistemas como Oracle, SQL Server o MySQL superaron las limitaciones de los ficheros planos. Aportaron consultas complejas (SQL), transacciones seguras (ACID), seguridad avanzada y concurrencia multiusuario. Los ficheros directos quedaron relegados a tareas de soporte (logs, configuraciones y exportaciones).
+2.  **Era de las Bases de Datos Relacionales (Relational Database Management System [RDBMS])**: Sistemas como Oracle, SQL Server o MySQL superaron las limitaciones de los ficheros planos. Aportaron consultas complejas (SQL), transacciones seguras (ACID), seguridad avanzada y concurrencia multiusuario. Los ficheros directos quedaron relegados a tareas de soporte (logs, configuraciones y exportaciones).
 
 ```text
 🗄️ Ejemplo de Abstracción Relacional (Tabla SQL e Índice B-Tree):
@@ -74,6 +74,25 @@ La interacción del software con los datos almacenados ha pasado por tres grande
   │ 1  │ Clara Oswald   │ SHOP_MANAGER │ 2550.00│     instantánea a la fila con ID=2
   │ 2  │ Pedro Almodovar│ CLERK        │ 1350.00│     sin escanear la tabla entera.
   └────┴────────────────┴──────────────┴────────┘
+
+🗂️ Ejemplo de Índice B-Tree por ID: El B-Tree organiza los valores del índice en forma de árbol para localizar rápidamente los datos sin necesidad de recorrer toda la tabla.
+
+                 [ 4 ]
+                /     \
+             [2, 3]   [6, 7]
+             /   \     /   \
+            1     2   5     8
+                  ↑
+              ID = 2
+                  ↓
+        ┌──────────────────┐
+        │ ID = 2           │
+        │ Pedro Almodovar  │
+        │ CLERK            │
+        │ 1350.00 €        │
+        └──────────────────┘
+
+[Simulador de Árbol B (B-Tree)](https://meskeia.com/simulador-arboles-b/)
 ```
 
 3.  **Era de la Interconectividad y el Big Data**: Con la expansión de Internet y la comunicación entre sistemas heterogéneos, los ficheros volvieron a cobrar protagonismo como formato estándar de intercambio. Surgieron formatos universales legibles por humanos (CSV, XML, JSON, YAML). Además, la explosión del Big Data implicó trabajar con volúmenes masivos de datos en sistemas de archivos distribuidos (como HDFS en Hadoop) o almacenes de objetos en la nube (como Amazon S3, Google Cloud Storage o Azure Blob Storage) accesibles mediante APIs.
