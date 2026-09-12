@@ -1282,7 +1282,7 @@ Fichero:
 
 Si queremos procesar el dato número 4, normalmente debemos haber recorrido antes los datos anteriores.
 
-### Ejemplo cotidiano
+#### Ejemplo cotidiano
 
 Es parecido a leer un libro desde el principio:
 
@@ -1292,7 +1292,7 @@ Página 1 → Página 2 → Página 3 → Página 4
 
 Si queremos llegar a la página 4, seguimos el orden de las páginas.
 
-### ¿Cuándo resulta adecuado?
+#### ¿Cuándo resulta adecuado?
 
 Es especialmente útil cuando necesitamos **procesar muchos o todos los datos del archivo**:
 
@@ -1304,19 +1304,19 @@ Es especialmente útil cuando necesitamos **procesar muchos o todos los datos de
 
 Por ejemplo, para analizar un archivo de logs y contar cuántos errores contiene, tiene sentido recorrer sus líneas una detrás de otra.
 
-### Ventajas
+#### Ventajas
 
 * Es sencillo de implementar.
 * Resulta muy adecuado para procesar grandes cantidades de datos de principio a fin.
 * Permite procesar los datos progresivamente sin necesidad de cargar todo el archivo en memoria.
 
-### Inconveniente
+#### Inconveniente
 
 Si necesitamos localizar repetidamente un dato situado en una posición concreta de un archivo grande, recorrer todos los datos anteriores puede resultar poco eficiente.
 
 ---
 
-### 🚀 Ejemplo: procesar un archivo de logs línea a línea
+#### 🚀 Ejemplo: procesar un archivo de logs línea a línea
 
 Supongamos que una aplicación genera un archivo:
 
@@ -1367,7 +1367,7 @@ application.log
 
 ---
 
-## 4.2. Acceso aleatorio o directo
+### 4.2. Acceso aleatorio o directo
 
 El acceso aleatorio permite **desplazarnos directamente a una posición concreta del archivo**, sin tener que procesar previamente todos los datos que se encuentran antes.
 
@@ -1406,7 +1406,7 @@ seek(48)  → posición 48
 
 ---
 
-### ¿Cuándo es especialmente útil?
+#### ¿Cuándo es especialmente útil?
 
 El acceso aleatorio resulta interesante cuando trabajamos con archivos cuyos registros tienen una **estructura conocida**, especialmente cuando cada registro ocupa un tamaño fijo.
 
@@ -1441,7 +1441,7 @@ Así podemos acceder directamente al registro que necesitamos.
 
 ---
 
-### 🧮 Ejemplo: registros de tamaño fijo
+#### 🧮 Ejemplo: registros de tamaño fijo
 
 Supongamos que cada empleado se almacena mediante:
 
@@ -1480,7 +1480,7 @@ El puntero se sitúa directamente al comienzo del registro.
 
 ---
 
-### ¿Y si queremos únicamente el salario?
+#### ¿Y si queremos únicamente el salario?
 
 Dentro de cada registro:
 
@@ -1522,7 +1522,7 @@ posición del campo =
 
 ---
 
-### 🚀 Ejemplo práctico con `RandomAccessFile`
+#### 🚀 Ejemplo práctico con `RandomAccessFile`
 
 Vamos a utilizar un archivo binario de empleados y modificar directamente el salario de un registro concreto.
 
@@ -1607,7 +1607,7 @@ No necesitamos leer previamente los registros 0 y 1 para situarnos en el Registr
 
 ---
 
-## 4.3. Acceso secuencial vs. acceso aleatorio
+### 4.3. Acceso secuencial vs. acceso aleatorio
 
 | Característica              | Secuencial           | Aleatorio                               |
 | --------------------------- | -------------------- | --------------------------------------- |
@@ -1642,11 +1642,11 @@ ALEATORIO
 
 ---
 
-## 4.4. ¿Qué estrategia elegir?
+### 4.4. ¿Qué estrategia elegir?
 
 La decisión depende de **cómo va a utilizar la aplicación los datos**.
 
-### Elegiremos acceso secuencial cuando...
+#### Elegiremos acceso secuencial cuando...
 
 Necesitemos procesar la información de forma ordenada:
 
@@ -1657,7 +1657,7 @@ JSON → procesar el documento
 TXT → recorrer las líneas
 ```
 
-### Elegiremos acceso aleatorio cuando...
+#### Elegiremos acceso aleatorio cuando...
 
 Necesitemos consultar o modificar registros concretos:
 
@@ -1673,7 +1673,7 @@ Si los registros tienen tamaño fijo, podemos calcular directamente su posición
 
 ---
 
-## 4.5. En las aplicaciones reales pueden combinarse
+### 4.5. En las aplicaciones reales pueden combinarse
 
 Las dos estrategias no son excluyentes.
 
@@ -1695,7 +1695,7 @@ Por ejemplo, imaginemos una aplicación que mantiene un archivo de registros:
 
 Lo importante no es memorizar una clase concreta, sino entender **qué estrategia necesita la aplicación según la forma en que va a utilizar los datos**.
 
-### 🧠 Idea clave
+#### 🧠 Idea clave
 
 > **Acceso secuencial:** recorremos los datos siguiendo un orden.
 
