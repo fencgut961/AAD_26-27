@@ -200,7 +200,7 @@ En la nube podemos utilizar **Object Storage**, donde los archivos se almacenan 
    └── fotos/foto2.jpg
 ```
 
-### 🪣 ¿Qué es un Bucket?
+#### 🪣 ¿Qué es un Bucket?
 
 Un **bucket** es simplemente un **contenedor para almacenar objetos**.
 
@@ -226,7 +226,7 @@ fotos/foto1.jpg
 
 Aunque parece que `fotos` es una carpeta, **en Object Storage normalmente forma parte del nombre (Key) del objeto**.
 
-### 🔑 ¿Qué diferencia hay con un archivo local?
+#### 🔑 ¿Qué diferencia hay con un archivo local?
 
 | Sistema de archivos                        | Object Storage                              |
 | ------------------------------------------ | ------------------------------------------- |
@@ -236,7 +236,7 @@ Aunque parece que `fotos` es una carpeta, **en Object Storage normalmente forma 
 | Acceso mediante el sistema de archivos     | Acceso mediante HTTP/HTTPS                  |
 | Ej.: NTFS, ext4                            | Ej.: Amazon S3                              |
 
-### 🚀 Ejemplo con Java
+#### 🚀 Ejemplo con Java
 
 Una aplicación **Spring Boot** puede utilizar un SDK para comunicarse con un servicio de Object Storage:
 
