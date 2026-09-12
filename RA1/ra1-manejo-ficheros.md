@@ -1,4 +1,4 @@
-# RA1. Manejo de ficheros
+# RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
 
 ---
 
