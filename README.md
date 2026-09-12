@@ -10,7 +10,7 @@ Este repositorio organiza el trabajo del módulo siguiendo los **Resultados de A
 
 ## Resultados de Aprendizaje y Criterios de Evaluación
 
-### RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.
+### [RA1. Desarrolla aplicaciones que gestionan información almacenada en ficheros identificando el campo de aplicación de los mismos y utilizando clases específicas.](https://github.com/fencgut961/AAD_26-27/blob/main/RA1/ra1-manejo-ficheros.md)
 
 - **CEv a.** Se han utilizado clases para la gestión de ficheros y directorios.
 - **CEv b.** Se han valorado las ventajas y los inconvenientes de las distintas formas de acceso.
