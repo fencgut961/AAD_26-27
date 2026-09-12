@@ -381,7 +381,7 @@ En muchas aplicaciones actuales encontramos formatos que combinan **texto y dato
 
 Esto permite almacenar o transportar información estructurada junto con imágenes, documentos, sonidos u otros recursos.
 
-### 📦 DOCX, XLSX y PPTX: un archivo que contiene muchos archivos
+#### 📦 DOCX, XLSX y PPTX: un archivo que contiene muchos archivos
 
 Los formatos modernos de Microsoft Office (`.docx`, `.xlsx` y `.pptx`) son en realidad **contenedores ZIP**.
 
@@ -412,7 +412,7 @@ Por ejemplo, un documento Word puede contener:
 
 ---
 
-### 🔤 Base64: convertir datos binarios en texto
+#### 🔤 Base64: convertir datos binarios en texto
 
 En ocasiones necesitamos enviar un fichero binario a través de un sistema que trabaja principalmente con **texto**.
 
@@ -465,7 +465,7 @@ El receptor puede realizar el proceso inverso:
       🖼️ imagen.png
 ```
 
-### ⚠️ Base64 no comprime ni cifra
+#### ⚠️ Base64 no comprime ni cifra
 
 Es importante distinguir estos conceptos:
 
@@ -479,7 +479,7 @@ Base64 **no proporciona seguridad** y tampoco reduce el tamaño del archivo. De 
 
 ---
 
-### ☕ Ejemplo práctico en Java
+#### ☕ Ejemplo práctico en Java
 
 Java proporciona la clase `Base64` para realizar la codificación y decodificación.
 
@@ -599,7 +599,7 @@ Cuando volvemos a leerlo, hacemos el proceso contrario:
 
 La codificación indica **cómo deben interpretarse esos bytes para obtener los caracteres correctos**.
 
-### 🌍 UTF-8: una codificación universal
+#### 🌍 UTF-8: una codificación universal
 
 Actualmente, **UTF-8 es la codificación más utilizada para trabajar con texto**.
 
@@ -617,7 +617,7 @@ UTF-8 utiliza entre **1 y 4 bytes por carácter**, dependiendo del carácter.
 
 Además, es compatible con ASCII: los caracteres básicos del inglés utilizan exactamente los mismos valores que en ASCII.
 
-### 💥 ¿Qué ocurre si utilizamos una codificación incorrecta?
+#### 💥 ¿Qué ocurre si utilizamos una codificación incorrecta?
 
 El problema aparece cuando un fichero se escribe utilizando una codificación y se lee utilizando otra.
 
@@ -673,7 +673,7 @@ Este fenómeno se conoce habitualmente como **Mojibake**.
 
 > 💡 **Idea clave:** los bytes no contienen por sí mismos una letra. Necesitamos conocer la **codificación utilizada** para convertir esos bytes correctamente en caracteres.
 
-### ☕ Java: indicar explícitamente la codificación
+#### ☕ Java: indicar explícitamente la codificación
 
 Cuando trabajamos con ficheros de texto, es recomendable indicar explícitamente la codificación que queremos utilizar.
 
@@ -716,7 +716,7 @@ Texto ──────────────────► Bytes
               UTF-8
 ```
 
-### ⚠️ No confundir codificación con idioma
+#### ⚠️ No confundir codificación con idioma
 
 UTF-8 **no traduce** un texto de un idioma a otro.
 
@@ -781,7 +781,7 @@ Java dispone de dos APIs principales para resolver estos problemas.
 
 ---
 
-## 3.1. La API clásica: `java.io.File`
+### 3.1. La API clásica: `java.io.File`
 
 `File` es la forma tradicional de representar un archivo o directorio en Java.
 
@@ -817,7 +817,7 @@ File
  └── ¿Dónde está?          → getAbsolutePath()
 ```
 
-### ¿Para qué resulta útil `File`?
+#### ¿Para qué resulta útil `File`?
 
 Principalmente para **consultar y gestionar archivos y directorios**.
 
@@ -841,7 +841,7 @@ Para leer o escribir su contenido, `java.io` utiliza otras clases como `FileInpu
 
 ---
 
-### 📋 Métodos básicos de `File`
+#### 📋 Métodos básicos de `File`
 
 | Método              | Retorno    | ¿Qué permite hacer?                       |
 | ------------------- | ---------- | ----------------------------------------- |
@@ -858,7 +858,7 @@ Para leer o escribir su contenido, `java.io` utiliza otras clases como `FileInpu
 | `list()`            | `String[]` | Obtener los nombres de un directorio      |
 | `listFiles()`       | `File[]`   | Obtener sus elementos como objetos `File` |
 
-### `mkdir()` frente a `mkdirs()`
+#### `mkdir()` frente a `mkdirs()`
 
 La diferencia es sencilla:
 
@@ -885,7 +885,7 @@ Si `datos` y `2026` no existen:
 
 ---
 
-## 3.2. ¿Por qué aparece `java.nio.file`?
+### 3.2. ¿Por qué aparece `java.nio.file`?
 
 `java.io.File` funciona y sigue formando parte de Java. Sin embargo, con el tiempo se necesitó una API más completa para trabajar con el sistema de archivos.
 
@@ -915,7 +915,7 @@ Sus dos protagonistas son:
 
 Esta separación hace que el modelo sea mucho más claro:
 
-### `Path` → la ruta
+#### `Path` → la ruta
 
 Representa la ubicación de un archivo o directorio.
 
@@ -923,7 +923,7 @@ Representa la ubicación de un archivo o directorio.
 Path path = Path.of("datos", "alumnos.csv");
 ```
 
-### `Files` → la operación
+#### `Files` → la operación
 
 Proporciona métodos para trabajar con esa ruta:
 
@@ -961,7 +961,7 @@ Files
 
 ---
 
-## 3.3. `Path`: trabajar con rutas de forma cómoda
+### 3.3. `Path`: trabajar con rutas de forma cómoda
 
 Una ventaja importante de `Path` es que permite **construir y manipular rutas** sin tener que escribir manualmente los separadores del sistema operativo.
 
@@ -1001,7 +1001,7 @@ Algunos métodos importantes son:
 
 ---
 
-## 3.4. `Files`: realizar operaciones sobre archivos
+### 3.4. `Files`: realizar operaciones sobre archivos
 
 Una vez tenemos un `Path`, la clase `Files` proporciona los métodos necesarios para trabajar con él.
 
@@ -1039,7 +1039,7 @@ Además, muchas operaciones de `Files` utilizan excepciones como `IOException` p
 
 ---
 
-## 3.5. Un ejemplo real: crear un directorio de logs
+### 3.5. Un ejemplo real: crear un directorio de logs
 
 Supongamos que una aplicación necesita guardar sus registros en:
 
@@ -1094,7 +1094,7 @@ Path
 
 ---
 
-## 3.6. Una ventaja importante: copiar, mover y eliminar
+### 3.6. Una ventaja importante: copiar, mover y eliminar
 
 Una de las mejoras más evidentes de NIO.2 es que operaciones habituales se expresan directamente mediante métodos de `Files`.
 
@@ -1122,7 +1122,7 @@ Esto hace que el código sea más **claro, corto y fácil de mantener**.
 
 ---
 
-## 3.7. Recorrer directorios con `Files.walk()`
+### 3.7. Recorrer directorios con `Files.walk()`
 
 Otra funcionalidad especialmente interesante de NIO.2 es `Files.walk()`.
 
@@ -1190,7 +1190,7 @@ public void run(String... args) {
 
 ---
 
-## 3.8. ¿Cuál debemos utilizar?
+### 3.8. ¿Cuál debemos utilizar?
 
 La pregunta no es realmente **"¿`File` o `Path`?"**, sino entender la evolución de la API.
 
@@ -1217,7 +1217,7 @@ java.nio.file
              └── recorrer
 ```
 
-### 🧠 Qué debemos recordar
+#### 🧠 Qué debemos recordar
 
 > **`File` y `Path` representan la ubicación de un recurso.**
 
