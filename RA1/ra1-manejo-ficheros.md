@@ -375,650 +375,1870 @@ public void run(String... args) {
 
 ---
 
-### 2.3. Formatos Híbridos Modernos y Serialización Base64
-Muchas de las estructuras que utilizamos diariamente combinan ambas tecnologías de forma transparente para ofrecer portabilidad y potencia:
-*   **Formatos de Oficina (DOCX, XLSX, PPTX)**: No son un único archivo; en realidad son contenedores comprimidos (formato binario `.zip`) que albergan en su interior una jerarquía de ficheros estructurados de texto plano (XML) y recursos multimedia individuales.
+### 2.3. Formatos híbridos modernos y Base64
+
+En muchas aplicaciones actuales encontramos formatos que combinan **texto y datos binarios**.
+
+Esto permite almacenar o transportar información estructurada junto con imágenes, documentos, sonidos u otros recursos.
+
+### 📦 DOCX, XLSX y PPTX: un archivo que contiene muchos archivos
+
+Los formatos modernos de Microsoft Office (`.docx`, `.xlsx` y `.pptx`) son en realidad **contenedores ZIP**.
+
+En su interior encontramos diferentes tipos de información:
+
+* **XML** → estructura, contenido, estilos y metadatos.
+* **Imágenes y otros recursos** → ficheros binarios.
+* **Ficheros auxiliares** → configuración y relaciones entre los elementos.
+
+Por ejemplo, un documento Word puede contener:
 
 ```text
-📂 Descomposición de un Fichero Híbrido Documento.docx (ZIP contenedor):
-  Documento.docx (Renombrado a .zip y descomprimido)
-  ├── [Content_Types].xml         (Texto plano XML: metadatos de tipos)
-  ├── word/
-  │   ├── document.xml            (Texto plano XML: el cuerpo completo del documento)
-  │   ├── styles.xml              (Texto plano XML: estilos de fuente)
-  │   └── media/
-  │       └── image1.png          (Binario puro: imagen insertada en la página)
+📄 Documento.docx
+       │
+       ▼
+   📦 Contenedor ZIP
+       │
+       ├── 📄 XML → contenido del documento
+       ├── 📄 XML → estilos
+       ├── 📄 XML → configuración
+       │
+       └── 📁 media/
+             ├── 🖼️ image1.png
+             └── 🖼️ image2.jpg
 ```
 
-*   **Archivos PDF**: Combinan bloques de texto plano para definir la maquetación física de la página con flujos binarios comprimidos para incrustar gráficos vectoriales e imágenes.
-*   **Serialización Base64**: Técnica de codificación que traduce cualquier secuencia de bytes binarios (como un archivo PDF o una imagen) en una cadena de caracteres legibles y seguros para su transmisión web. Esto permite incrustar recursos multimedia dentro de un mensaje de texto (como JSON) sin corromper el canal de comunicación.
+> 💡 **Idea clave:** algunos formatos que aparentemente son un único fichero son, internamente, contenedores que reúnen diferentes tipos de datos.
 
-```text
-🔤 Transformación de un Archivo Binario a Cadena Base64 para JSON:
-  [ Bytes Binarios Crudos ]  ➔  [ 3 Bytes = 24 bits ]  ➔  [ Dividir en 4 bloques de 6 bits ]
-  01000001 01000010 01000011     010000 | 010100 | 001001 | 000011
-  
-  Mapear según Tabla ASCII Base64 ➔ "QUJD"
-  
-  Resultado incrustado en JSON:
-  {
+---
+
+### 🔤 Base64: convertir datos binarios en texto
+
+En ocasiones necesitamos enviar un fichero binario a través de un sistema que trabaja principalmente con **texto**.
+
+Por ejemplo, una API REST puede utilizar JSON:
+
+```json
+{
     "filename": "avatar.png",
     "mimeType": "image/png",
-    "dataBase64": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA..."
-  }
-```
-
-#### 🚀 Ejemplo Práctico en Java: Codificación y decodificación de binarios en Base64 para JSON
-Este código funcional permite tomar cualquier archivo binario de imagen local, convertir sus bytes a una cadena Base64 pura y simular la recepción y restauración del archivo físico original desde esa cadena de texto.
-
-```java
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Base64;
-
-public class Base64FileProcessor {
-    public static void main(String[] args) {
-        Path imagePath = Paths.get("image.jpg");
-        Path restoredPath = Paths.get("restored_image.jpg");
-
-        if (!Files.exists(imagePath)) {
-            System.out.println("Please provide 'image.jpg' in the root directory to test Base64 conversion.");
-            return;
-        }
-
-        try {
-            // 1. Leer los bytes crudos del archivo binario
-            byte[] binaryBytes = Files.readAllBytes(imagePath);
-            System.out.println("1. Read " + binaryBytes.length + " bytes from binary file.");
-
-            // 2. Codificar los bytes binarios a una cadena Base64 (Texto ASCII seguro)
-            String base64EncodedString = Base64.getEncoder().encodeToString(binaryBytes);
-            System.out.println("2. Encoded to Base64 String. First 50 chars: " + 
-                               base64EncodedString.substring(0, Math.min(50, base64EncodedString.length())) + "...");
-
-            // 3. Simular payload JSON
-            String jsonPayload = "{
-  "filename": "image.jpg",
-  "content": "" + base64EncodedString + ""
-}";
-            System.out.println("3. Simulated JSON Payload constructed successfully.");
-
-            // 4. Decodificar la cadena Base64 de vuelta a un arreglo de bytes binarios
-            byte[] decodedBytes = Base64.getDecoder().decode(base64EncodedString);
-
-            // 5. Guardar los bytes restaurados en disco como una nueva imagen física
-            Files.write(restoredPath, decodedBytes);
-            System.out.println("4. Decoded bytes written to '" + restoredPath.getFileName() + "'. Matching original size: " + decodedBytes.length + " bytes.");
-
-        } catch (IOException e) {
-            System.err.println("Error processing Base64 conversion: " + e.getMessage());
-        }
-    }
+    "data": "..."
 }
 ```
 
----
+Pero JSON trabaja con texto, mientras que una imagen está formada por **bytes**.
 
-### 2.4. Codificaciones de Texto: Traduciendo Bits a Caracteres y Localización (Multilenguaje)
-La codificación (o juego de caracteres) es la **regla de traducción matemática** que define qué carácter gráfico corresponde a cada byte de información almacenado en el disco duro.
+Aquí podemos utilizar **Base64**.
+
+Base64 es una técnica que **codifica datos binarios como una cadena de caracteres**:
 
 ```text
-💥 El Fenómeno "Mojibake" (Corrupción de Caracteres):
-  Bytes físicos grabados en disco (UTF-8 para la palabra 'Canción'):
-  [ 0x43 ] [ 0x61 ] [ 0x6E ] [ 0x63 ] [ 0x69 ] [ 0xC3 0xB3 ] [ 0x6E ]
-    'C'      'a'      'n'      'c'      'i'       'ó'        'n'
-
-  Si la aplicación lee el archivo usando la tabla ISO-8859-1 (Latin-1):
-  [ 0xC3 ] ➔ Interpretado como 'Ã'
-  [ 0xB3 ] ➔ Interpretado como '³'
-  Resultado corrupto mostrado en pantalla: "CanciÃ³n"
+🖼️ imagen.png
+      │
+      │ bytes
+      ▼
+┌────────────────┐
+│     Base64     │
+│  codificación  │
+└───────┬────────┘
+        │
+        ▼
+"iVBORw0KGgoAAAANSUhEUg..."
+        │
+        ▼
+      JSON
 ```
 
-*   **ASCII**: El estándar clásico de 7 bits. Extremadamente limitado, solo contempla 128 caracteres del alfabeto inglés básico y caracteres de control.
-*   **ISO-8859-1 (Latin-1)**: Extensión de 8 bits (256 caracteres) adaptada para lenguas de Europa occidental. Presenta graves problemas de compatibilidad al migrar entre plataformas.
-*   **UTF-8**: El estándar universal absoluto de ancho variable (utiliza de 1 a 4 bytes por carácter según su complejidad). Es compatible hacia atrás con ASCII y capaz de representar de forma unificada cualquier carácter del catálogo Unicode (incluyendo tildes, alfabetos asiáticos y emojis).
-*   **UTF-16**: Estándar de ancho fijo (generalmente 2 bytes por carácter) que la máquina virtual de Java (JVM) utiliza internamente para representar y manipular las cadenas de texto (`String`) en la memoria RAM.
+El receptor puede realizar el proceso inverso:
 
-💡 **Directriz de Diseño**: Para evitar los clásicos errores de visualización de caracteres especiales (como caracteres extraños `` o fallos en las tildes), las aplicaciones deben **declarar y forzar siempre el uso de la codificación UTF-8 de manera explícita** al abrir flujos de lectura y escritura.
+```text
+        JSON
+          │
+          ▼
+   Cadena Base64
+          │
+          │ decodificar
+          ▼
+    Bytes originales
+          │
+          ▼
+      🖼️ imagen.png
+```
+
+### ⚠️ Base64 no comprime ni cifra
+
+Es importante distinguir estos conceptos:
+
+| Técnica        | ¿Qué hace?                           |
+| -------------- | ------------------------------------ |
+| **Base64**     | Convierte datos binarios en texto    |
+| **Compresión** | Reduce el tamaño de los datos        |
+| **Cifrado**    | Protege los datos mediante una clave |
+
+Base64 **no proporciona seguridad** y tampoco reduce el tamaño del archivo. De hecho, el resultado ocupa aproximadamente un **33 % más** que los datos binarios originales.
 
 ---
 
-#### 🏮 El Reto de la Internacionalización: Leer Chino/Japonés y Procesarlo a Español/Inglés
-Un caso real en ingeniería de software es la ingesta de ficheros provenientes de sistemas internacionales con caracteres complejos de la familia CJK (Chino, Japonés, Coreano). Si la aplicación no abre el archivo en UTF-8 o en el charset asiático específico (ej. `Shift_JIS` o `GBK`), la lectura colapsa.
+### ☕ Ejemplo práctico en Java
 
-#### 🚀 Ejemplo Práctico en Java: Generador y Lector Multilenguaje (Español, Inglés, Chino y Japonés)
-Este programa completo e interactivo permite a los alumnos **generar automáticamente 4 ficheros de ejemplo en diferentes idiomas (Español, Inglés, Chino Simplificado y Japonés)** utilizando la codificación universal **UTF-8**, y comprobar visualmente en consola qué ocurre al leerlos con el Charset correcto versus un Charset incorrecto (efecto *Mojibake*).
+Java proporciona la clase `Base64` para realizar la codificación y decodificación.
+
+En este ejemplo:
+
+1. Leemos una imagen como bytes.
+2. La convertimos a Base64.
+3. Simulamos que esa cadena se envía como parte de un JSON.
+4. Decodificamos la cadena.
+5. Recuperamos el archivo original.
 
 ```java
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+@Override
+public void run(String... args) {
 
-public class MultiLanguageCharsetDemo {
+    Path imagePath = Path.of("image.jpg");
+    Path restoredPath = Path.of("restored_image.jpg");
 
-    public static void main(String[] args) {
-        // Rutas de los 4 ficheros de prueba multilenguaje
-        File spanishFile = new File("spanish_catalog_utf8.txt");
-        File englishFile = new File("english_catalog_ascii.txt");
-        File chineseFile = new File("chinese_catalog_utf8.txt");
-        File japaneseFile = new File("japanese_catalog_utf8.txt");
+    if (Files.exists(imagePath)) {
 
-        System.out.println("=== 1. GENERATING MULTI-LANGUAGE SAMPLE FILES ===");
+        try {
+            // Leer el fichero binario
+            byte[] binaryData = Files.readAllBytes(imagePath);
 
-        // 1. Crear Fichero en Español (con tildes, ñ, ¡, ¿, €)
-        writeSampleFile(spanishFile, StandardCharsets.UTF_8, 
-            "ID: 101 | Producto: Camiseta de Algodón con Cuello en V | Precio: 19.99 € | Origen: España
-" +
-            "ID: 102 | Producto: Pantalón Vaquero Clásico con Tildes y Ñ | Precio: 39.50 € | Estado: ¡Disponible!"
-        );
+            log.info("Tamaño original: {} bytes", binaryData.length);
 
-        // 2. Crear Fichero en Inglés (ASCII estándar)
-        writeSampleFile(englishFile, StandardCharsets.US_ASCII, 
-            "ID: 201 | Item: Premium Denim Jacket | Price: 49.99 USD | Origin: USA
-" +
-            "ID: 202 | Item: Cotton Crewneck T-Shirt | Price: 15.00 USD | Status: In Stock"
-        );
+            // Codificar los bytes en Base64
+            String base64 = Base64.getEncoder().encodeToString(binaryData);
 
-        // 3. Crear Fichero en Chino Simplificado (Familia CJK)
-        writeSampleFile(chineseFile, StandardCharsets.UTF_8, 
-            "ID: 301 | 商品: 亚麻混纺衬衫 (Linen Shirt) | 价格: 299.00 CNY | 发货地: 中国 (China)
-" +
-            "ID: 302 | 商品: 纯棉休闲长裤 (Casual Cotton Pants) | 状态: 现货 (In Stock)"
-        );
+            log.info("Tamaño en Base64: {} caracteres", base64.length());
+            log.info("Base64: {}...", base64.substring(0, Math.min(50, base64.length())));
 
-        // 4. Crear Fichero en Japonés (Kanji y Hiragana)
-        writeSampleFile(japaneseFile, StandardCharsets.UTF_8, 
-            "ID: 401 | 商品: 富士山 シルクドレス (Silk Dress) | 価格: 8500 JPY | 原産国: 日本 (Japan)
-" +
-            "ID: 402 | 商品: 桜 刺繍ジャケット (Embroidered Jacket) | 数量: 15 点"
-        );
+            // Decodificar Base64 para recuperar los bytes originales
+            byte[] restoredData = Base64.getDecoder().decode(base64);
 
-        System.out.println("
-=== 2. READING FILES WITH CORRECT CHARSET (UTF-8) ===");
-        readAndDisplayFile(spanishFile, StandardCharsets.UTF_8, "Español (UTF-8)");
-        readAndDisplayFile(chineseFile, StandardCharsets.UTF_8, "Chino (UTF-8)");
-        readAndDisplayFile(japaneseFile, StandardCharsets.UTF_8, "Japonés (UTF-8)");
+            // Restaurar el fichero
+            Files.write(restoredPath, restoredData);
 
-        System.out.println("
-=== 3. DEMONSTRATING MOJIBAKE (INCORRECT CHARSET ISO-8859-1 / ASCII) ===");
-        System.out.println("⚠️ Notice how CJK Chinese characters and Spanish accents get corrupted when read with ISO-8859-1:");
-        readAndDisplayFile(chineseFile, StandardCharsets.ISO_8859_1, "Chino LEÍDO CON ISO-8859-1 (CORRUPTO)");
-        readAndDisplayFile(spanishFile, StandardCharsets.ISO_8859_1, "Español LEÍDO CON ISO-8859-1 (CORRUPTO)");
-    }
+            log.info("Fichero restaurado correctamente: {}", restoredPath);
 
-    /**
-     * Escribe texto en un archivo en disco forzando un Charset determinado.
-     */
-    private static void writeSampleFile(File file, Charset charset, String content) {
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(file), charset))) {
-            writer.write(content);
-            System.out.println("✔ Created " + file.getName() + " using " + charset.name());
         } catch (IOException e) {
-            System.err.println("Error writing " + file.getName() + ": " + e.getMessage());
+            log.error("Error al procesar el fichero", e);
         }
-    }
 
-    /**
-     * Lee un archivo en disco aplicando un Charset y muestra el resultado en la consola.
-     */
-    private static void readAndDisplayFile(File file, Charset charset, String label) {
-        System.out.println("
---- Reading [" + label + "] ---");
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(file), charset))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading " + file.getName() + ": " + e.getMessage());
-        }
+    } else {
+        log.warn("No se encuentra el fichero: {}", imagePath);
     }
 }
 ```
 
+El proceso completo puede resumirse así:
+
+```text
+┌──────────────────┐
+│   🖼️ image.jpg   │
+│      bytes       │
+└────────┬─────────┘
+         │
+         │ Base64.encode()
+         ▼
+┌──────────────────────────┐
+│ "iVBORw0KGgoAAAANS..."   │
+│          🔤              │
+└────────┬─────────────────┘
+         │
+         │ JSON / API REST
+         ▼
+┌──────────────────────────┐
+│      📡 TRANSMISIÓN      │
+└────────┬─────────────────┘
+         │
+         │ Base64.decode()
+         ▼
+┌─────────────────────────┐
+│ restored_image.jpg      │
+│        🖼️              │
+└─────────────────────────┘
+```
+
+> 💡 **Idea clave:** Base64 no convierte realmente una imagen en texto. **Codifica sus bytes en una representación textual** que puede transportarse fácilmente dentro de estructuras como JSON.
+
+> 🚀 **En aplicaciones reales:** esta técnica puede utilizarse para transportar pequeños archivos o imágenes dentro de una petición JSON. Para archivos grandes, normalmente resulta más eficiente utilizar una subida binaria (`multipart/form-data`) o almacenamiento de objetos.
+
 ---
 
-## 3. Acceso Clásico (`java.io`) vs. Acceso Moderno (`java.nio`)
+### 2.4. Codificaciones de texto: de bytes a caracteres
 
-Para interactuar con el sistema de archivos, Java proporciona dos APIs diferenciadas:
+Cuando guardamos texto en un fichero, el ordenador no almacena directamente letras como `á`, `ñ` o `日`.
 
-### 3.1. La API Clásica (`java.io.File`)
-Representa la aproximación original basada en flujos de datos.
-*   **La clase `File` como referencia de ruta**: Un objeto `File` no representa el contenido del archivo; es simplemente una abstracción de **la ruta física o dirección** del elemento en el disco.
-*   **Propiedades de `File`**: Es independiente del sistema operativo, traduciendo de forma transparente las rutas con barra invertida de Windows (`C:\`) y barras de Linux (`/home/`).
-*   **Limitaciones de Diseño**:
-    *   No dispone de métodos eficientes y nativos para copiar o mover archivos de forma directa, requiriendo bucles manuales de bytes.
-    *   Su gestión de errores es muy limitada: la mayoría de sus métodos devuelven valores de tipo verdadero/falso (booleanos) en caso de fallo en lugar de lanzar excepciones descriptivas.
+El texto debe convertirse en **bytes** mediante una codificación.
 
-#### 📋 Tabla de Métodos Críticos de la Clase `File`
-Para consultar metadatos y gestionar el sistema de archivos, los alumnos utilizarán estos métodos básicos de inspección:
+```text
+        ✍️ TEXTO
+           │
+           │ codificar
+           ▼
+      🔢 BYTES
+           │
+           │ guardar
+           ▼
+       💾 FICHERO
+```
 
-| Método | Tipo Retornado | Descripción Conceptual | Casos Prácticos y Detalles |
-| :--- | :--- | :--- | :--- |
-| **`exists()`** | `boolean` | Comprueba la existencia física del elemento. | ¿Existe el archivo de configuración de la app antes de lanzarla? |
-| **`isFile()`** | `boolean` | Valida si la ruta corresponde a un fichero regular. | Evita intentar leer un directorio como si fuera un archivo de datos. |
-| **`isDirectory()`**| `boolean` | Valida si la ruta corresponde a un directorio. | Útil antes de listar los contenidos de una carpeta. |
-| **`getName()`** | `String` | Devuelve el nombre del recurso. | Recupera "students.csv" de una ruta absoluta larga. |
-| **`getAbsolutePath()`**| `String` | Devuelve la ruta completa del sistema de archivos. | Permite responder conceptualmente a la duda de: *"¿Dónde se ha creado exactamente este archivo?"* |
-| **`length()`** | `long` | Devuelve el tamaño exacto en bytes. | Devuelve `0` si el archivo no existe. |
-| **`lastModified()`**| `long` | Devuelve la marca de tiempo de modificación. | Permite comprobar si el archivo de configuración ha cambiado recientemente. |
-| **`delete()`** | `boolean` | Elimina el archivo o directorio de forma inmediata. | Un directorio debe estar completamente vacío para poder ser eliminado. |
-| **`mkdir()`** | `boolean` | Crea el directorio final de la ruta indicada. | Falla si alguna de las carpetas intermedias de la ruta no existe. |
-| **`mkdirs()`** | `boolean` | Crea toda la jerarquía de directorios intermedia. | Si creas `/datos/2025/logs/`, creará todas las carpetas que falten. |
-| **`list()`** | `String[]` | Devuelve los nombres de los elementos internos. | Listado rápido de nombres de archivo en un directorio. |
-| **`listFiles()`** | `File[]` | Devuelve los objetos `File` de la carpeta. | Permite recorrer recursivamente el directorio consultando metadatos individuales. |
+Cuando volvemos a leerlo, hacemos el proceso contrario:
 
-#### 🚀 Ejemplo Práctico en Java: Inspección de metadatos de un directorio con `java.io.File`
-Este código permite inspeccionar un directorio completo y listar sus archivos mostrando atributos físicos detallados en consola.
+```text
+       💾 FICHERO
+           │
+           │ bytes
+           ▼
+        🔢 BYTES
+           │
+           │ decodificar
+           ▼
+        ✍️ TEXTO
+```
+
+La codificación indica **cómo deben interpretarse esos bytes para obtener los caracteres correctos**.
+
+### 🌍 UTF-8: una codificación universal
+
+Actualmente, **UTF-8 es la codificación más utilizada para trabajar con texto**.
+
+Permite representar caracteres de diferentes idiomas:
+
+```text
+Español    →  Canción, España, Árbol
+Inglés     →  Software, Computer
+Chino      →  数据库
+Japonés    →  こんにちは
+Emoji      →  🚀 🔒 💻
+```
+
+UTF-8 utiliza entre **1 y 4 bytes por carácter**, dependiendo del carácter.
+
+Además, es compatible con ASCII: los caracteres básicos del inglés utilizan exactamente los mismos valores que en ASCII.
+
+### 💥 ¿Qué ocurre si utilizamos una codificación incorrecta?
+
+El problema aparece cuando un fichero se escribe utilizando una codificación y se lee utilizando otra.
+
+Por ejemplo, el texto:
+
+```text
+Canción
+```
+
+se puede almacenar en UTF-8 utilizando estos bytes:
+
+```text
+43 61 6E 63 69 C3 B3 6E
+```
+
+Si esos bytes se leen correctamente como UTF-8:
+
+```text
+43 61 6E 63 69 C3 B3 6E
+ ↓  ↓  ↓  ↓  ↓  ↓  ↓  ↓
+ C  a  n  c  i  ó     n
+
+Resultado → Canción
+```
+
+Pero si los mismos bytes se interpretan utilizando una codificación incorrecta, pueden aparecer caracteres extraños:
+
+```text
+Canción
+   ↓
+CanciÃ³n
+```
+
+Este fenómeno se conoce habitualmente como **Mojibake**.
+
+```text
+┌───────────────────────┐
+│ 💾 Fichero            │
+│                       │
+│ Bytes almacenados     │
+│       C3 B3           │
+└──────────┬────────────┘
+           │
+           │ UTF-8
+           ▼
+       ✅ "ó"
+
+           │
+           │ Codificación incorrecta
+           ▼
+       ❌ "Ã³"
+```
+
+> 💡 **Idea clave:** los bytes no contienen por sí mismos una letra. Necesitamos conocer la **codificación utilizada** para convertir esos bytes correctamente en caracteres.
+
+### ☕ Java: indicar explícitamente la codificación
+
+Cuando trabajamos con ficheros de texto, es recomendable indicar explícitamente la codificación que queremos utilizar.
+
+Por ejemplo, utilizando `UTF-8`:
 
 ```java
-import java.io.File;
-import java.util.Date;
+@Override
+public void run(String... args) {
 
-public class DirectoryInspector {
-    public static void main(String[] args) {
-        // Apuntar al directorio actual de ejecución
-        File currentDirectory = new File(".");
-        
-        System.out.println("Scanning directory: " + currentDirectory.getAbsolutePath());
-        
-        // Obtener el listado físico de elementos contenidos en la carpeta
-        File[] fileList = currentDirectory.listFiles();
-        
-        if (fileList != null) {
-            for (File resource : fileList) {
-                // Comprobar polimórficamente el tipo de recurso
-                if (resource.isDirectory()) {
-                    System.out.println("[DIR]  " + resource.getName());
-                } else if (resource.isFile()) {
-                    // Mostrar tamaño físico y fecha de última modificación
-                    System.out.println("[FILE] " + resource.getName() + 
-                                       " | Size: " + resource.length() + " bytes" +
-                                       " | Modified: " + new Date(resource.lastModified()));
-                }
-            }
+    Path path = Path.of("mensaje.txt");
+
+    try {
+        Files.writeString(
+                path,
+                "¡Hola! Canción, España, 数据库, こんにちは 🚀",
+                StandardCharsets.UTF_8
+        );
+
+        String content = Files.readString(
+                path,
+                StandardCharsets.UTF_8
+        );
+
+        log.info("Contenido: {}", content);
+
+    } catch (IOException e) {
+        log.error("Error al trabajar con el fichero", e);
+    }
+}
+```
+
+En este caso, tanto la escritura como la lectura utilizan **UTF-8**:
+
+```text
+              UTF-8
+Texto ──────────────────► Bytes
+  ▲                         │
+  │                         │
+  └─────────────────────────┘
+              UTF-8
+```
+
+### ⚠️ No confundir codificación con idioma
+
+UTF-8 **no traduce** un texto de un idioma a otro.
+
+Por ejemplo:
+
+```text
+"Hola" ──┐
+         │
+"Hello" ─┼──► UTF-8 ──► Bytes
+         │
+"こんにちは" ─┘
+```
+
+UTF-8 simplemente define **cómo representar esos caracteres mediante bytes**.
+
+La traducción entre idiomas es otra cuestión completamente diferente.
+
+> 🚀 **En aplicaciones reales:** problemas de codificación aparecen frecuentemente al importar CSV, leer archivos generados por otros sistemas, consumir APIs, procesar datos de diferentes países o intercambiar información entre aplicaciones.
+
+
+---
+
+## 3. Acceso clásico (`java.io`) vs. acceso moderno (`java.nio`)
+
+Cuando una aplicación necesita trabajar con un archivo, realmente hay **dos problemas diferentes**:
+
+1. **Identificar dónde está el archivo**.
+2. **Realizar una operación sobre él**: leerlo, escribirlo, copiarlo, moverlo, eliminarlo, etc.
+
+Java dispone de dos APIs principales para resolver estos problemas.
+
+```text
+             SISTEMA DE ARCHIVOS
+                     │
+                     ▼
+              ¿Dónde está?
+                     │
+              ┌──────┴──────┐
+              │             │
+            File           Path
+              │             │
+          java.io      java.nio.file
+                            │
+                            ▼
+                    ¿Qué queremos hacer?
+                            │
+                          Files
+                            │
+             ┌──────────────┼──────────────┐
+             ▼              ▼              ▼
+           Leer          Escribir        Copiar
+```
+
+### Las dos APIs
+
+| API             | Elemento principal | Papel                                                          |
+| --------------- | ------------------ | -------------------------------------------------------------- |
+| `java.io`       | `File`             | Representar una ruta y realizar operaciones básicas            |
+| `java.nio.file` | `Path` + `Files`   | Representar rutas y realizar operaciones de forma más completa |
+
+> **Idea fundamental:** `File` y `Path` representan **rutas**. No contienen el contenido del archivo.
+
+---
+
+## 3.1. La API clásica: `java.io.File`
+
+`File` es la forma tradicional de representar un archivo o directorio en Java.
+
+Por ejemplo:
+
+```java
+File file = new File("datos/alumnos.csv");
+```
+
+Aquí Java no está leyendo `alumnos.csv`.
+
+Simplemente estamos creando un objeto que representa:
+
+```text
+datos/
+   │
+   └── alumnos.csv
+             ▲
+             │
+          File
+```
+
+A partir de ese objeto podemos preguntar por las características del recurso:
+
+```text
+File
+ │
+ ├── ¿Existe?              → exists()
+ ├── ¿Es un archivo?       → isFile()
+ ├── ¿Es un directorio?    → isDirectory()
+ ├── ¿Qué nombre tiene?    → getName()
+ ├── ¿Qué tamaño tiene?    → length()
+ └── ¿Dónde está?          → getAbsolutePath()
+```
+
+### ¿Para qué resulta útil `File`?
+
+Principalmente para **consultar y gestionar archivos y directorios**.
+
+Por ejemplo, una aplicación podría comprobar si existe un archivo de configuración antes de intentar utilizarlo:
+
+```java
+File config = new File("config.properties");
+
+if (config.exists() && config.isFile()) {
+    log.info("Archivo de configuración encontrado: {}", config.getAbsolutePath());
+} else {
+    log.warn("No se encuentra el archivo de configuración.");
+}
+```
+
+Esto muestra una idea importante:
+
+> **Crear un objeto `File` no significa abrir ni leer el archivo.**
+
+Para leer o escribir su contenido, `java.io` utiliza otras clases como `FileInputStream`, `FileOutputStream`, `FileReader` o `FileWriter`.
+
+---
+
+### 📋 Métodos básicos de `File`
+
+| Método              | Retorno    | ¿Qué permite hacer?                       |
+| ------------------- | ---------- | ----------------------------------------- |
+| `exists()`          | `boolean`  | Comprobar si existe                       |
+| `isFile()`          | `boolean`  | Comprobar si es un archivo                |
+| `isDirectory()`     | `boolean`  | Comprobar si es un directorio             |
+| `getName()`         | `String`   | Obtener el nombre                         |
+| `getAbsolutePath()` | `String`   | Obtener la ruta absoluta                  |
+| `length()`          | `long`     | Obtener el tamaño en bytes                |
+| `lastModified()`    | `long`     | Obtener la fecha de modificación          |
+| `delete()`          | `boolean`  | Eliminar un recurso                       |
+| `mkdir()`           | `boolean`  | Crear un directorio                       |
+| `mkdirs()`          | `boolean`  | Crear una estructura de directorios       |
+| `list()`            | `String[]` | Obtener los nombres de un directorio      |
+| `listFiles()`       | `File[]`   | Obtener sus elementos como objetos `File` |
+
+### `mkdir()` frente a `mkdirs()`
+
+La diferencia es sencilla:
+
+```text
+mkdir()
+   │
+   └── crea únicamente el directorio indicado
+
+mkdirs()
+   │
+   └── crea también los directorios intermedios
+```
+
+Por ejemplo:
+
+```text
+datos/2026/logs/
+```
+
+Si `datos` y `2026` no existen:
+
+* `mkdir()` → no puede crear toda la estructura.
+* `mkdirs()` → crea los directorios necesarios.
+
+---
+
+## 3.2. ¿Por qué aparece `java.nio.file`?
+
+`java.io.File` funciona y sigue formando parte de Java. Sin embargo, con el tiempo se necesitó una API más completa para trabajar con el sistema de archivos.
+
+Por eso Java incorporó **NIO.2**, cuyo paquete principal para este trabajo es:
+
+```text
+java.nio.file
+```
+
+Sus dos protagonistas son:
+
+```text
+             java.nio.file
+                  │
+          ┌───────┴───────┐
+          ▼               ▼
+        Path             Files
+          │               │
+       ¿Dónde?         ¿Qué hacer?
+          │               │
+          │         ┌─────┼─────┐
+          │         ▼     ▼     ▼
+          │       Leer Escribir Copiar
+          │
+          └── representa la ruta
+```
+
+Esta separación hace que el modelo sea mucho más claro:
+
+### `Path` → la ruta
+
+Representa la ubicación de un archivo o directorio.
+
+```java
+Path path = Path.of("datos", "alumnos.csv");
+```
+
+### `Files` → la operación
+
+Proporciona métodos para trabajar con esa ruta:
+
+```text
+Files
+ │
+ ├── exists()
+ ├── createFile()
+ ├── createDirectories()
+ ├── readString()
+ ├── writeString()
+ ├── copy()
+ ├── move()
+ ├── delete()
+ ├── list()
+ └── walk()
+```
+
+Por tanto:
+
+```text
+Path
+ │
+ │  "datos/alumnos.csv"
+ │
+ ▼
+Files
+ │
+ ├── leer
+ ├── escribir
+ ├── copiar
+ ├── mover
+ └── eliminar
+```
+
+---
+
+## 3.3. `Path`: trabajar con rutas de forma cómoda
+
+Una ventaja importante de `Path` es que permite **construir y manipular rutas** sin tener que escribir manualmente los separadores del sistema operativo.
+
+En lugar de:
+
+```java
+Path path = Path.of("datos/alumnos.csv");
+```
+
+también podemos construirla por partes:
+
+```java
+Path path = Path.of("datos", "alumnos.csv");
+```
+
+Java se encarga de utilizar el separador adecuado en cada sistema.
+
+Además, `Path` permite trabajar con las diferentes partes de una ruta:
+
+```text
+datos/2026/alumnos.csv
+   │      │       │
+   │      │       └── getFileName()
+   │      └────────── getParent()
+   └───────────────── estructura de la ruta
+```
+
+Algunos métodos importantes son:
+
+| Método             | Función                                     |
+| ------------------ | ------------------------------------------- |
+| `getFileName()`    | Obtiene el nombre final                     |
+| `getParent()`      | Obtiene el directorio padre                 |
+| `toAbsolutePath()` | Convierte la ruta en absoluta               |
+| `resolve()`        | Añade una ruta a otra                       |
+| `normalize()`      | Simplifica elementos redundantes de la ruta |
+
+---
+
+## 3.4. `Files`: realizar operaciones sobre archivos
+
+Una vez tenemos un `Path`, la clase `Files` proporciona los métodos necesarios para trabajar con él.
+
+Por ejemplo:
+
+```text
+Path config = Path.of("config", "app.properties");
+
+             │
+             ▼
+        Files.exists()
+             │
+             ▼
+       ¿Existe el archivo?
+```
+
+Y podemos realizar operaciones como:
+
+| Operación                  | Método                      |
+| -------------------------- | --------------------------- |
+| Comprobar existencia       | `Files.exists()`            |
+| Comprobar si es archivo    | `Files.isRegularFile()`     |
+| Comprobar si es directorio | `Files.isDirectory()`       |
+| Crear archivo              | `Files.createFile()`        |
+| Crear directorios          | `Files.createDirectories()` |
+| Leer texto                 | `Files.readString()`        |
+| Escribir texto             | `Files.writeString()`       |
+| Copiar                     | `Files.copy()`              |
+| Mover / renombrar          | `Files.move()`              |
+| Eliminar                   | `Files.delete()`            |
+| Listar directorio          | `Files.list()`              |
+| Recorrer directorios       | `Files.walk()`              |
+
+Además, muchas operaciones de `Files` utilizan excepciones como `IOException` para comunicar los errores, lo que permite conocer mejor qué ha sucedido.
+
+---
+
+## 3.5. Un ejemplo real: crear un directorio de logs
+
+Supongamos que una aplicación necesita guardar sus registros en:
+
+```text
+logs/
+   └── application.log
+```
+
+Con NIO.2 podemos expresar la operación de forma muy directa:
+
+```java
+@Override
+public void run(String... args) {
+
+    Path logFile = Path.of("logs", "application.log");
+
+    try {
+
+        Files.createDirectories(logFile.getParent());
+
+        Files.writeString(
+                logFile,
+                "Aplicación iniciada correctamente.\n"
+        );
+
+        log.info("Archivo de log: {}", logFile.toAbsolutePath());
+        log.info("Tamaño: {} bytes", Files.size(logFile));
+
+    } catch (IOException e) {
+        log.error("Error al trabajar con el archivo de log", e);
+    }
+}
+```
+
+Aquí se ve claramente la responsabilidad de cada elemento:
+
+```text
+Path
+ │
+ └── "logs/application.log"
+             │
+             │ indica dónde
+             ▼
+           Files
+             │
+             ├── createDirectories()
+             │
+             ├── writeString()
+             │
+             └── size()
+```
+
+---
+
+## 3.6. Una ventaja importante: copiar, mover y eliminar
+
+Una de las mejoras más evidentes de NIO.2 es que operaciones habituales se expresan directamente mediante métodos de `Files`.
+
+Por ejemplo:
+
+```text
+                 Path origen
+                     │
+                     ▼
+               Files.copy()
+                     │
+                     ▼
+                Path destino
+```
+
+No necesitamos implementar manualmente un proceso de lectura y escritura para realizar una copia.
+
+Lo mismo ocurre con:
+
+* `Files.copy()` → copiar.
+* `Files.move()` → mover o renombrar.
+* `Files.delete()` → eliminar.
+
+Esto hace que el código sea más **claro, corto y fácil de mantener**.
+
+---
+
+## 3.7. Recorrer directorios con `Files.walk()`
+
+Otra funcionalidad especialmente interesante de NIO.2 es `Files.walk()`.
+
+Permite recorrer un directorio y sus subdirectorios:
+
+```text
+proyecto/
+├── src/
+│   ├── Main.java
+│   └── Utils.java
+├── logs/
+│   └── application.log
+└── datos/
+    └── alumnos.csv
+```
+
+Podemos recorrer todo el árbol y quedarnos, por ejemplo, únicamente con los archivos `.log`:
+
+```text
+Files.walk()
+      │
+      ▼
+  todos los recursos
+      │
+      ▼
+isRegularFile()
+      │
+      ▼
+  solo archivos
+      │
+      ▼
+  extensión .log
+      │
+      ▼
+ archivos encontrados
+```
+
+Este tipo de operación resulta muy útil en aplicaciones reales para buscar documentos, localizar archivos de configuración o analizar archivos de registro.
+
+```java
+@Override
+public void run(String... args) {
+
+    Path root = Path.of(".");
+
+    try (Stream<Path> paths = Files.walk(root)) {
+
+        paths.filter(Files::isRegularFile)
+                .filter(path -> path.toString().endsWith(".log"))
+                .forEach(path ->
+                        log.info(
+                                "{} | {} bytes",
+                                path.toAbsolutePath(),
+                                Files.size(path)
+                        )
+                );
+
+    } catch (IOException e) {
+        log.error("Error al recorrer el directorio", e);
+    }
+}
+```
+
+> `Files.walk()` devuelve un `Stream<Path>`, por lo que podemos utilizar las operaciones de Streams para filtrar y procesar los archivos encontrados.
+
+---
+
+## 3.8. ¿Cuál debemos utilizar?
+
+La pregunta no es realmente **"¿`File` o `Path`?"**, sino entender la evolución de la API.
+
+```text
+java.io
+   │
+   └── File
+       └── API clásica
+            └── todavía válida
+
+
+java.nio.file
+   │
+   ├── Path
+   │    └── representa la ruta
+   │
+   └── Files
+        └── realiza las operaciones
+             ├── leer
+             ├── escribir
+             ├── copiar
+             ├── mover
+             ├── eliminar
+             └── recorrer
+```
+
+### 🧠 Qué debemos recordar
+
+> **`File` y `Path` representan la ubicación de un recurso.**
+
+> **`Files` proporciona las operaciones para trabajar con ese recurso.**
+
+Por tanto, en aplicaciones nuevas utilizaremos normalmente:
+
+```text
+Path + Files
+```
+
+mientras que `File` es fundamental para **entender código Java existente y la API clásica de `java.io`**.
+
+La siguiente idea será especialmente importante:
+
+**`Path` nos dice dónde está el recurso; `Files` nos permite trabajar con él.**
+
+
+---
+
+## 4. Formas de acceso a ficheros
+
+Cuando una aplicación trabaja con un archivo, existen diferentes formas de localizar y procesar sus datos.
+
+Las dos estrategias fundamentales son:
+
+* **Acceso secuencial** → los datos se procesan siguiendo un orden.
+* **Acceso aleatorio o directo** → podemos desplazarnos directamente a una posición determinada.
+
+La elección depende de **cómo están organizados los datos y de cómo necesita utilizarlos la aplicación**.
+
+```text
+                    FICHERO
+                       │
+              ¿Cómo accedemos?
+                       │
+             ┌─────────┴─────────┐
+             ▼                   ▼
+       SECUENCIAL            ALEATORIO
+             │                   │
+        uno tras otro       posición concreta
+             │                   │
+        CSV · logs          registros fijos
+        texto · JSON        archivos binarios
+```
+
+---
+
+### 4.1. Acceso secuencial
+
+En el acceso secuencial, los datos se procesan **en orden**, normalmente desde el principio hasta el final del archivo.
+
+```text
+Fichero:
+
+┌─────┬─────┬─────┬─────┬─────┐
+│  1  │  2  │  3  │  4  │  5  │
+└─────┴─────┴─────┴─────┴─────┘
+   ↓     ↓     ↓     ↓     ↓
+   1  →  2  →  3  →  4  →  5
+```
+
+Si queremos procesar el dato número 4, normalmente debemos haber recorrido antes los datos anteriores.
+
+### Ejemplo cotidiano
+
+Es parecido a leer un libro desde el principio:
+
+```text
+Página 1 → Página 2 → Página 3 → Página 4
+```
+
+Si queremos llegar a la página 4, seguimos el orden de las páginas.
+
+### ¿Cuándo resulta adecuado?
+
+Es especialmente útil cuando necesitamos **procesar muchos o todos los datos del archivo**:
+
+* Archivos CSV.
+* Archivos de texto.
+* Logs de aplicaciones.
+* Ficheros JSON o XML.
+* Procesamiento de datos por lotes.
+
+Por ejemplo, para analizar un archivo de logs y contar cuántos errores contiene, tiene sentido recorrer sus líneas una detrás de otra.
+
+### Ventajas
+
+* Es sencillo de implementar.
+* Resulta muy adecuado para procesar grandes cantidades de datos de principio a fin.
+* Permite procesar los datos progresivamente sin necesidad de cargar todo el archivo en memoria.
+
+### Inconveniente
+
+Si necesitamos localizar repetidamente un dato situado en una posición concreta de un archivo grande, recorrer todos los datos anteriores puede resultar poco eficiente.
+
+---
+
+### 🚀 Ejemplo: procesar un archivo de logs línea a línea
+
+Supongamos que una aplicación genera un archivo:
+
+```text
+application.log
+```
+
+y queremos localizar las líneas que contienen errores.
+
+Con `Files.lines()` podemos procesar el archivo **línea a línea**:
+
+```java
+@Override
+public void run(String... args) {
+
+    Path path = Path.of("application.log");
+
+    try (Stream<String> lines = Files.lines(path)) {
+
+        lines.filter(line -> line.contains("ERROR"))
+                .forEach(line -> log.info("Error encontrado: {}", line));
+
+    } catch (IOException e) {
+        log.error("Error al leer el archivo de logs", e);
+    }
+}
+```
+
+El flujo puede representarse así:
+
+```text
+application.log
+      │
+      ▼
+   línea 1 ──► ¿ERROR?
+      │
+      ▼
+   línea 2 ──► ¿ERROR?
+      │
+      ▼
+   línea 3 ──► ¿ERROR?
+      │
+      ▼
+     ...
+```
+
+> **Importante:** `Files.lines()` devuelve un `Stream<String>` que permite procesar las líneas progresivamente. No es necesario cargar todo el contenido del archivo en un `String`.
+
+---
+
+## 4.2. Acceso aleatorio o directo
+
+El acceso aleatorio permite **desplazarnos directamente a una posición concreta del archivo**, sin tener que procesar previamente todos los datos que se encuentran antes.
+
+```text
+Fichero:
+
+┌──────────┬──────────┬──────────┬──────────┐
+│ Registro │ Registro │ Registro │ Registro │
+│    0     │    1     │    2     │    3     │
+└──────────┴──────────┴──────────┴──────────┘
+                         ▲
+                         │
+                    acceder aquí
+```
+
+En Java, una de las clases clásicas para realizar este tipo de acceso es:
+
+```text
+RandomAccessFile
+```
+
+Su principal característica es que permite **mover el puntero de lectura/escritura** mediante:
+
+```java
+seek(posicion)
+```
+
+Por ejemplo:
+
+```text
+seek(0)   → principio del archivo
+seek(16)  → posición 16
+seek(32)  → posición 32
+seek(48)  → posición 48
+```
+
+---
+
+### ¿Cuándo es especialmente útil?
+
+El acceso aleatorio resulta interesante cuando trabajamos con archivos cuyos registros tienen una **estructura conocida**, especialmente cuando cada registro ocupa un tamaño fijo.
+
+Por ejemplo:
+
+```text
+employees.dat
+
+┌────────────────┬────────────────┬────────────────┐
+│ Registro 0     │ Registro 1     │ Registro 2     │
+│ 16 bytes       │ 16 bytes       │ 16 bytes       │
+└────────────────┴────────────────┴────────────────┘
+       0               16               32
+```
+
+Si sabemos que cada registro ocupa **16 bytes**, podemos calcular dónde comienza cualquier registro:
+
+```text
+posición = número_de_registro × tamaño_del_registro
+```
+
+Por ejemplo:
+
+```text
+Registro 0 → 0 × 16 = 0
+Registro 1 → 1 × 16 = 16
+Registro 2 → 2 × 16 = 32
+Registro 3 → 3 × 16 = 48
+```
+
+Así podemos acceder directamente al registro que necesitamos.
+
+---
+
+### 🧮 Ejemplo: registros de tamaño fijo
+
+Supongamos que cada empleado se almacena mediante:
+
+| Campo     |       Tamaño |
+| --------- | -----------: |
+| `ID`      |      4 bytes |
+| `Edad`    |      4 bytes |
+| `Salario` |      8 bytes |
+| **Total** | **16 bytes** |
+
+El archivo tendría esta estructura:
+
+```text
+0                16               32               48
+│                 │                │                │
+▼                 ▼                ▼                ▼
+┌────────────────┬────────────────┬────────────────┐
+│   Registro 0   │   Registro 1   │   Registro 2   │
+│    16 bytes    │    16 bytes    │    16 bytes    │
+└────────────────┴────────────────┴────────────────┘
+```
+
+Para acceder al **Registro 2**:
+
+```text
+2 × 16 = 32 bytes
+```
+
+Por tanto:
+
+```java
+raf.seek(32);
+```
+
+El puntero se sitúa directamente al comienzo del registro.
+
+---
+
+### ¿Y si queremos únicamente el salario?
+
+Dentro de cada registro:
+
+```text
+Registro
+┌──────────┬──────────┬────────────────┐
+│ ID       │ Edad     │ Salario        │
+│ 4 bytes  │ 4 bytes  │ 8 bytes        │
+└──────────┴──────────┴────────────────┘
+0          4          8                16
+```
+
+El salario comienza en el byte **8** del registro.
+
+Para obtener el salario del Registro 2:
+
+```text
+Inicio del registro → 2 × 16 = 32
+Desplazamiento       → 8
+--------------------------------
+Posición final       → 40
+```
+
+Por tanto:
+
+```java
+raf.seek(40);
+```
+
+La idea general es:
+
+```text
+posición del campo =
+    (número de registro × tamaño del registro)
+    + desplazamiento del campo
+```
+
+> Este mecanismo es especialmente útil cuando conocemos de antemano la estructura y el tamaño de los registros.
+
+---
+
+### 🚀 Ejemplo práctico con `RandomAccessFile`
+
+Vamos a utilizar un archivo binario de empleados y modificar directamente el salario de un registro concreto.
+
+```java
+@Override
+public void run(String... args) {
+
+    Path path = Path.of("employees.dat");
+
+    final int RECORD_SIZE = 16;
+
+    try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw")) {
+
+        raf.setLength(0);
+
+        // Registro 0
+        raf.writeInt(1);
+        raf.writeInt(25);
+        raf.writeDouble(1200.00);
+
+        // Registro 1
+        raf.writeInt(2);
+        raf.writeInt(30);
+        raf.writeDouble(1500.00);
+
+        // Registro 2
+        raf.writeInt(3);
+        raf.writeInt(40);
+        raf.writeDouble(1800.00);
+
+        // Acceder directamente al Registro 2
+        long recordPosition = 2L * RECORD_SIZE;
+
+        raf.seek(recordPosition);
+
+        int id = raf.readInt();
+        int age = raf.readInt();
+        double salary = raf.readDouble();
+
+        log.info(
+                "Empleado encontrado: ID={}, Edad={}, Salario={} €",
+                id, age, salary
+        );
+
+        // El salario comienza 8 bytes después del inicio del registro
+        long salaryPosition = recordPosition + 8;
+
+        raf.seek(salaryPosition);
+        raf.writeDouble(2500.00);
+
+        log.info("Salario actualizado directamente en el archivo.");
+
+    } catch (IOException e) {
+        log.error("Error al acceder al archivo", e);
+    }
+}
+```
+
+Aquí se ve claramente la ventaja del acceso directo:
+
+```text
+employees.dat
+
+Registro 0 ────────────────┐
+Registro 1 ────────────────┤
+Registro 2 ────────────────┤
+                           │
+                           ▼
+                    seek(32)
+                           │
+                           ▼
+                     Registro 2
+                           │
+                           ▼
+                    seek(40)
+                           │
+                           ▼
+                      Salario
+```
+
+No necesitamos leer previamente los registros 0 y 1 para situarnos en el Registro 2.
+
+---
+
+## 4.3. Acceso secuencial vs. acceso aleatorio
+
+| Característica              | Secuencial           | Aleatorio                               |
+| --------------------------- | -------------------- | --------------------------------------- |
+| Forma de acceso             | En orden             | Posición concreta                       |
+| Operación habitual          | Recorrer datos       | Saltar a un registro                    |
+| Ideal para                  | Logs, CSV, texto     | Registros binarios                      |
+| Necesita conocer posiciones | No                   | Sí, normalmente                         |
+| Complejidad                 | Baja                 | Mayor                                   |
+| Ejemplo Java                | `Files.lines()`      | `RandomAccessFile`                      |
+| Uso típico                  | Procesar información | Consultar/modificar registros concretos |
+
+### Una forma sencilla de recordarlo
+
+```text
+SECUENCIAL
+──────────
+
+1 → 2 → 3 → 4 → 5
+
+"Voy recorriendo los datos"
+
+
+ALEATORIO
+─────────
+
+1   2   3   4   5
+        ↑
+      seek()
+
+"Voy directamente donde necesito"
+```
+
+---
+
+## 4.4. ¿Qué estrategia elegir?
+
+La decisión depende de **cómo va a utilizar la aplicación los datos**.
+
+### Elegiremos acceso secuencial cuando...
+
+Necesitemos procesar la información de forma ordenada:
+
+```text
+CSV → leer todas las filas
+LOG → analizar todas las entradas
+JSON → procesar el documento
+TXT → recorrer las líneas
+```
+
+### Elegiremos acceso aleatorio cuando...
+
+Necesitemos consultar o modificar registros concretos:
+
+```text
+employees.dat
+      │
+      ├── Buscar empleado 125
+      ├── Modificar empleado 240
+      └── Consultar empleado 780
+```
+
+Si los registros tienen tamaño fijo, podemos calcular directamente su posición.
+
+---
+
+## 4.5. En las aplicaciones reales pueden combinarse
+
+Las dos estrategias no son excluyentes.
+
+Una aplicación puede utilizar **acceso secuencial para generar o procesar información** y **acceso directo para consultar determinados datos**.
+
+Por ejemplo, imaginemos una aplicación que mantiene un archivo de registros:
+
+```text
+                employees.dat
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+   Procesamiento             Consulta concreta
+    secuencial                  directa
+          │                       │
+          ▼                       ▼
+  recorrer registros         seek(posición)
+```
+
+Lo importante no es memorizar una clase concreta, sino entender **qué estrategia necesita la aplicación según la forma en que va a utilizar los datos**.
+
+### 🧠 Idea clave
+
+> **Acceso secuencial:** recorremos los datos siguiendo un orden.
+
+> **Acceso aleatorio:** nos desplazamos directamente a una posición conocida.
+
+> **Si conocemos la estructura y el tamaño de los registros, podemos calcular su posición y acceder directamente a ellos.**
+
+
+## 5. El ciclo de vida de las operaciones sobre ficheros
+
+Cuando una aplicación trabaja con un fichero, podemos entender la operación como un ciclo:
+
+1. **Acceder al recurso.**
+2. **Leer o escribir los datos.**
+3. **Posicionarse en una parte concreta**, si es necesario.
+4. **Liberar el recurso** cuando ya no se necesita.
+
+En Java moderno, la API principal para trabajar con ficheros es `java.nio.file`, especialmente mediante `Path` y `Files`.
+
+```text
+                     FICHERO
+                        │
+                        ▼
+                  ┌──────────┐
+                  │   Path   │
+                  │ ubicación│
+                  └────┬─────┘
+                       │
+                       ▼
+                  ┌──────────┐
+                  │  Files   │
+                  │operaciones│
+                  └────┬─────┘
+                       │
+              ┌────────┴────────┐
+              │                 │
+              ▼                 ▼
+        Operaciones        Operaciones
+         sencillas          avanzadas
+              │                 │
+              ▼                 ▼
+    readString(), etc.   FileChannel
+```
+
+No todas las operaciones requieren que gestionemos manualmente cada una de estas fases. Los métodos de alto nivel de `Files` pueden encargarse internamente de abrir y cerrar el fichero cuando realizamos una operación puntual.
+
+---
+
+### 5.1. Acceder al fichero
+
+El primer paso consiste en identificar el fichero con el que queremos trabajar.
+
+Para ello utilizamos `Path`:
+
+```java
+// Representa la ubicación del fichero.
+// Path no lee ni modifica el contenido por sí mismo.
+Path path = Path.of("application.log");
+```
+
+`Path` representa la **ruta del fichero o directorio**, pero no realiza por sí mismo operaciones de lectura o escritura.
+
+Las operaciones las proporciona `Files`.
+
+Por ejemplo, para comprobar si existe un fichero:
+
+```java
+// Comprobamos si existe un fichero en la ruta indicada.
+if (Files.exists(path)) {
+
+    // El fichero existe y podemos continuar trabajando con él.
+    log.info("El fichero existe.");
+
+} else {
+
+    // La ruta no corresponde actualmente a un fichero existente.
+    log.warn("El fichero no existe.");
+}
+```
+
+Esta separación entre **representar la ubicación (`Path`)** y **realizar la operación (`Files`)** es una de las características fundamentales de la API moderna de ficheros de Java.
+
+---
+
+### 5.2. Lectura y escritura
+
+Una vez identificado el recurso, podemos realizar las operaciones necesarias.
+
+Para operaciones sencillas sobre archivos de texto, Java proporciona métodos de alto nivel como:
+
+```java
+// Lee todo el contenido del fichero y lo almacena en un String.
+String content = Files.readString(path);
+```
+
+y:
+
+```java
+// Escribe el texto indicado en el fichero.
+Files.writeString(
+        path,
+        "Aplicación iniciada correctamente."
+);
+```
+
+Estas operaciones son apropiadas cuando queremos leer o escribir el contenido completo de un fichero y su tamaño es razonable.
+
+Por ejemplo:
+
+```java
+@Override
+public void run(String... args) {
+
+    // Path identifica el fichero de configuración.
+    Path path = Path.of("config.txt");
+
+    try {
+
+        // Escribimos una configuración sencilla en el fichero.
+        // Si el fichero existe, su contenido se reemplaza.
+        Files.writeString(
+                path,
+                "server.port=8080\n"
+                        + "app.name=GestorPedidos"
+        );
+
+        // Leemos de nuevo todo el contenido del fichero.
+        String content = Files.readString(path);
+
+        // Mostramos la configuración obtenida.
+        log.info("Configuración:\n{}", content);
+
+    } catch (IOException e) {
+
+        // Gestionamos cualquier error de entrada/salida.
+        log.error("Error al trabajar con el fichero", e);
+    }
+}
+```
+
+En este caso, `Files` se encarga internamente de realizar la apertura, lectura o escritura y cierre necesarios para completar cada operación.
+
+---
+
+### 5.3. Procesamiento progresivo
+
+No siempre queremos cargar todo el fichero en memoria.
+
+Si trabajamos con un archivo grande, puede ser más apropiado procesar su contenido progresivamente.
+
+Por ejemplo, `Files.lines()` permite obtener un `Stream<String>` con las líneas del fichero:
+
+```java
+@Override
+public void run(String... args) {
+
+    // Fichero de logs que queremos analizar.
+    Path path = Path.of("application.log");
+
+    // Files.lines() permite procesar las líneas progresivamente.
+    // try-with-resources garantiza que el Stream se cierre correctamente.
+    try (Stream<String> lines = Files.lines(path)) {
+
+        // Nos quedamos únicamente con las líneas que contienen ERROR.
+        lines.filter(line -> line.contains("ERROR"))
+
+                // Procesamos cada línea encontrada.
+                .forEach(line ->
+                        log.info("Error encontrado: {}", line)
+                );
+
+    } catch (IOException e) {
+
+        // Gestionamos los errores producidos durante la lectura.
+        log.error("Error al procesar el fichero", e);
+    }
+}
+```
+
+Aquí el fichero se procesa **línea a línea**, en lugar de cargar todo su contenido de una sola vez.
+
+Como `Files.lines()` devuelve un `Stream` asociado a un recurso abierto, debemos cerrarlo correctamente. Por eso utilizamos **try-with-resources**.
+
+> **Regla práctica:** para ficheros pequeños y operaciones sencillas, `readString()` y `writeString()` son muy cómodos. Para ficheros grandes o procesamiento progresivo, podemos utilizar streams, lectores o escritores.
+
+---
+
+### 5.4. Posicionamiento y acceso avanzado
+
+Cuando necesitamos controlar con mayor precisión dónde leer o escribir, podemos utilizar las clases de `java.nio.channels`.
+
+Una de las más importantes es:
+
+```text
+FileChannel
+```
+
+`FileChannel` permite trabajar con archivos mediante `ByteBuffer` y realizar operaciones en posiciones concretas.
+
+Por ejemplo:
+
+```text
+FICHERO
+
+0          16          32          48
+│           │           │           │
+▼           ▼           ▼           ▼
+┌───────────┬───────────┬───────────┬───────────┐
+│ Registro 0│ Registro 1│ Registro 2│ Registro 3│
+└───────────┴───────────┴───────────┴───────────┘
+                        ▲
+                        │
+                  posición 32
+```
+
+Podemos leer directamente desde una posición determinada:
+
+```java
+// Lee los datos comenzando en la posición 32 del fichero.
+channel.read(buffer, 32);
+```
+
+En este caso, la lectura se realiza comenzando en el byte `32`.
+
+Esto resulta especialmente útil cuando trabajamos con **ficheros binarios estructurados**, registros de tamaño fijo o aplicaciones que necesitan un mayor control sobre las operaciones de entrada y salida.
+
+---
+
+### 5.5. `FileChannel` y `ByteBuffer`
+
+Cuando utilizamos `FileChannel`, los datos se intercambian normalmente mediante un `ByteBuffer`.
+
+El proceso puede representarse así:
+
+```text
+Fichero
+   │
+   │ bytes
+   ▼
+FileChannel
+   │
+   │
+   ▼
+ByteBuffer
+   │
+   ▼
+Datos procesados por Java
+```
+
+Por ejemplo, si cada registro ocupa 16 bytes:
+
+```java
+@Override
+public void run(String... args) {
+
+    // Fichero binario que contiene los registros de empleados.
+    Path path = Path.of("employees.dat");
+
+    try (FileChannel channel = FileChannel.open(
+            path,
+            StandardOpenOption.READ)) {
+
+        // Cada registro ocupa 16 bytes:
+        // 4 bytes para el ID
+        // 4 bytes para la edad
+        // 8 bytes para el salario
+        ByteBuffer buffer = ByteBuffer.allocate(16);
+
+        // El registro 2 comienza en el byte 32:
+        // 2 registros × 16 bytes = 32 bytes.
+        int bytesRead = channel.read(buffer, 32);
+
+        // Comprobamos que hemos obtenido el registro completo.
+        if (bytesRead == 16) {
+
+            // Preparamos el buffer para comenzar a leer
+            // los datos que acabamos de introducir.
+            buffer.flip();
+
+            // Recuperamos los campos en el mismo orden
+            // en el que fueron almacenados.
+            int id = buffer.getInt();
+            int age = buffer.getInt();
+            double salary = buffer.getDouble();
+
+            // Mostramos la información del empleado.
+            log.info(
+                    "Empleado: ID={}, Edad={}, Salario={} €",
+                    id,
+                    age,
+                    salary
+            );
+
         } else {
-            System.err.println("Unable to scan the directory. Path might be invalid.");
+
+            // No hemos podido obtener el registro completo.
+            log.warn("No se pudo leer el registro completo.");
         }
+
+    } catch (IOException e) {
+
+        // Gestionamos los posibles errores de entrada/salida.
+        log.error("Error al leer el fichero", e);
     }
 }
 ```
 
+En este ejemplo:
+
+1. `Path` identifica el fichero.
+2. `FileChannel` proporciona acceso al fichero.
+3. `ByteBuffer` reserva espacio para los datos.
+4. `channel.read(buffer, 32)` solicita la lectura comenzando en la posición `32`.
+5. `flip()` prepara el buffer para su lectura desde Java.
+6. `getInt()` y `getDouble()` interpretan los bytes según la estructura definida.
+7. No es necesario recorrer los registros anteriores.
+
+Este mecanismo proporciona un nivel de control mayor que los métodos de alto nivel de `Files`.
+
 ---
 
-### 3.2. La API Moderna NIO.2 (`java.nio.file`)
-Introducida para solventar las carencias del modelo clásico, separa el direccionamiento lógico del recurso de la manipulación de datos.
+### 5.6. Cierre de recursos
+
+Cuando trabajamos con recursos que permanecen abiertos, debemos cerrarlos al terminar.
+
+No hacerlo puede provocar **fugas de recursos (`Resource Leaks`)**.
+
+Por ejemplo, una aplicación que abre continuamente ficheros sin cerrarlos puede terminar alcanzando el límite de recursos permitido por el sistema:
 
 ```text
- 🏗️ Arquitectura de Desacoplamiento en NIO.2:
-  ┌────────────────────────┐         ┌────────────────────────────────────────┐
-  │ Interfaz Path          │ ──────► │ Dirección Lógica URI / Rutas Portables │
-  └────────────────────────┘         └────────────────────────────────────────┘
-              │
-              ▼
-  ┌────────────────────────┐         ┌────────────────────────────────────────┐
-  │ Clase Utilid. Files    │ ──────► │ Operaciones Atómicas de Alto Rendim.   │
-  └────────────────────────┘         └────────────────────────────────────────┘
-              │
-              ▼
-  ┌────────────────────────┐         ┌────────────────────────────────────────┐
-  │ FileSystemProvider     │ ──────► │ Abstracción: Disco Local / ZIP / S3    │
-  └────────────────────────┘         └────────────────────────────────────────┘
+Proceso Java
+     │
+     ├── Abre fichero
+     ├── Abre fichero
+     ├── Abre fichero
+     ├── Abre fichero
+     │
+     │       ...
+     │
+     ▼
+Límite de recursos alcanzado
+     │
+     ▼
+Error al intentar abrir nuevos recursos
 ```
 
-*   **La interfaz `Path`**: Representa de manera lógica la ruta de localización en el disco, abstrayendo por completo el sistema operativo subyacente y permitiendo trabajar con sistemas de archivos virtuales o distribuidos en red.
-*   **La clase de utilidad `Files`**: Centraliza todas las operaciones de manipulación física (copiar, mover, borrar, leer atributos avanzados) mediante métodos estáticos de alto rendimiento optimizados a nivel del sistema operativo.
-*   **Integración Funcional**: Se integra de forma nativa con los flujos de datos perezosos (Java Streams), permitiendo procesar millones de registros consumiendo el mínimo espacio en la memoria RAM.
+Entre las consecuencias podemos encontrar:
 
-#### 📋 Métodos Destacados de la Clase de Utilidad `Files`
-*   `Files.copy(Path src, Path dest, CopyOption... options)`: Copia nativa a nivel de sistema operativo.
-*   `Files.move(Path src, Path dest, CopyOption... options)`: Mueve o renombra archivos atómicamente.
-*   `Files.delete(Path path)`: Elimina el recurso lanzando excepciones detalladas (`NoSuchFileException`, etc.).
-*   `Files.readString(Path path)` / `Files.writeString(...)`: Operaciones inmediatas para archivos de texto pequeños.
-*   `Files.walk(Path start)` / `Files.find(...)`: Recorrido perezoso de árboles de directorios complejos usando Streams.
+* Recursos del sistema ocupados innecesariamente.
+* Imposibilidad de abrir nuevos ficheros.
+* Errores de entrada/salida.
+* Problemas de rendimiento.
+* Fallos en aplicaciones que trabajan con muchos recursos simultáneamente.
 
-#### 🚀 Ejemplo Práctico en Java: Manipulación robusta de ficheros usando la API NIO.2
-Este código demuestra cómo verificar, crear y escribir en un archivo usando el paradigma de objetos `Path` y métodos estáticos de `Files`.
+Por este motivo, **todo recurso que permanezca abierto debe cerrarse correctamente**.
+
+---
+
+### 5.7. Try-with-resources
+
+Java proporciona **try-with-resources** para automatizar el cierre de recursos que implementan `AutoCloseable`.
+
+Su estructura es:
 
 ```java
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.io.IOException;
+try (Recurso recurso = abrirRecurso()) {
 
-public class ModernFileManager {
-    public static void main(String[] args) {
-        // Representación lógica de la ruta mediante la interfaz Path
-        Path path = Paths.get("modern_log.txt");
-        
-        try {
-            // Comprobación segura y atómica de la existencia física del archivo
-            if (!Files.exists(path)) {
-                Files.createFile(path);
-                System.out.println("New file created using NIO.2 at: " + path.toAbsolutePath());
-            } else {
-                System.out.println("File already exists. Size: " + Files.size(path) + " bytes.");
-            }
-            
-            // Escribir contenido directamente pasando el conjunto de bytes del texto
-            String logMessage = "System launched. Status: Operational.";
-            Files.write(path, logMessage.getBytes());
-            System.out.println("Log message written successfully.");
-            
-        } catch (IOException e) {
-            // Gestión controlada con excepciones nativas y detalladas de NIO
-            System.err.println("NIO Exception occurred: " + e.getMessage());
-        }
-    }
+    // Operaciones realizadas utilizando el recurso.
+
+} catch (IOException e) {
+
+    // Tratamiento de posibles errores de entrada/salida.
+    log.error("Error de entrada/salida", e);
 }
 ```
 
-#### 🚀 Ejemplo Práctico en Java: Recorrido y búsqueda recursiva de subcarpetas con `Files.walk()`
-Este código avanzado busca recursivamente todos los archivos de logs (`.txt` o `.csv`) dentro del árbol de directorios de la aplicación de forma perezosa sin agotar la RAM.
+Al abandonar el bloque `try`, el recurso se cierra automáticamente, incluso si se produce una excepción.
+
+Por ejemplo, con `FileChannel`:
 
 ```java
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.stream.Stream;
+try (FileChannel channel = FileChannel.open(
+        path,
+        StandardOpenOption.READ)) {
 
-public class DirectoryTreeScanner {
-    public static void main(String[] args) {
-        Path rootPath = Paths.get("."); // Explorar desde el directorio raíz actual
-        
-        System.out.println("--- Recursive Directory Walk with NIO.2 Streams ---");
-        
-        // Files.walk abre un Stream perezoso que explora subcarpetas anidadas de forma automática
-        try (Stream<Path> stream = Files.walk(rootPath, 5)) { // Profundidad máxima de 5 niveles
-            
-            stream.filter(Files::isRegularFile) // Filtrar solo archivos regulares (omitir carpetas)
-                  .filter(p -> p.toString().endsWith(".txt") || p.toString().endsWith(".csv")) // Filtrar por extensión
-                  .forEach(filePath -> {
-                      try {
-                          System.out.println("Found: " + filePath.getFileName() + 
-                                             " | Path: " + filePath.toAbsolutePath() + 
-                                             " | Size: " + Files.size(filePath) + " bytes");
-                      } catch (IOException e) {
-                          System.err.println("Error reading size for: " + filePath);
-                      }
-                  });
-                  
-        } catch (IOException e) {
-            System.err.println("Error walking directory tree: " + e.getMessage());
-        }
-    }
+    // Realizamos las operaciones necesarias
+    // mientras el canal permanece abierto.
+    // ...
+
+} catch (IOException e) {
+
+    // Si se produce un error, lo gestionamos aquí.
+    log.error("Error al acceder al fichero", e);
 }
 ```
 
----
-
-## 4. Formas de Acceso a Ficheros
-
-La forma en que el cabezal físico o el controlador de estado sólido se desplaza por la secuencia de bytes del archivo determina la estrategia de acceso:
-
-### 4.1. Acceso Secuencial
-La información se procesa en orden lineal riguroso, desde el primer byte hasta el último.
-
-```text
-  💡 ANALOGÍA INTUITIVA (Como una cinta de casete o VHS)
-  Si deseas escuchar la canción de la pista 4, estás obligado a avanzar físicamente
-  la cinta por encima de las pistas 1, 2 y 3. No hay forma de saltar directamente.
-```
-
-*   **Mecanismo**: El puntero avanza de forma automatizada tras cada lectura. Si se desea leer una información en la posición `N`, el software debe leer y descartar las posiciones `1` a `N-1`.
-*   **Idoneidad**: Archivos de texto plano estructurados en líneas (CSV, logs, configuraciones) que requieren ser cargados por completo en la aplicación.
-*   👍 **Ventaja**: Implementación sumamente sencilla.
-*   👎 **Inconveniente**: Es muy ineficiente si se necesita leer o escribir datos en posiciones aleatorias de archivos de gran tamaño.
-
-#### 🚀 Ejemplo Práctico en Java: Lectura secuencial funcional usando Java Streams (`Files.lines`)
-Este código muestra cómo procesar secuencialmente archivos de texto línea por línea de manera perezosa, evitando saturar la memoria RAM.
+No necesitamos llamar manualmente a:
 
 ```java
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.io.IOException;
-import java.util.stream.Stream;
-
-public class SequentialStreamReader {
-    public static void main(String[] args) {
-        Path path = Paths.get("students.csv");
-        
-        // Uso de try-with-resources para asegurar el cierre automático del Stream
-        try (Stream<String> linesStream = Files.lines(path)) {
-            System.out.println("--- Reading File Sequentially with Streams ---");
-            // Filtrar y procesar datos sobre el flujo funcional perezoso
-            linesStream.filter(line -> !line.startsWith("ID")) // Omitir cabeceras
-                       .forEach(line -> System.out.println("Processed line: " + line));
-                       
-        } catch (IOException e) {
-            System.err.println("Error processing the sequential stream: " + e.getMessage());
-        }
-    }
-}
+channel.close();
 ```
+
+El propio mecanismo de **try-with-resources** se encarga del cierre.
 
 ---
 
-### 4.2. Acceso Aleatorio (o Acceso Directo)
-Permite posicionar el puntero de lectura/escritura en cualquier byte arbitrario del archivo de forma instantánea, sin necesidad de recorrer la información previa.
+### 5.8. Ejemplo práctico actual: registrar información en un log
 
-```text
-  💡 ANALOGÍA INTUITIVA (Como un disco de vinilo o un CD)
-  Puedes levantar la aguja o el láser y colocarlo directamente sobre el inicio de la pista 4,
-  reproduciendo la música sin perder tiempo en recorrer las pistas anteriores.
-```
+Un caso habitual en aplicaciones Java es añadir información a un fichero de logs.
 
-*   **Idoneidad**: Archivos binarios de estructura uniforme donde cada registro ocupa un tamaño exacto y predecible (bases de datos locales, índices de búsqueda).
-*   **El concepto del direccionamiento por bytes**: En Java, esto se gestiona mediante la clase **`RandomAccessFile`**, configurando el modo de acceso en lectura o escritura combinada (`"r"` o `"rw"`). Utiliza el método de reposicionamiento de puntero `seek(posición_en_bytes)`.
-
-#### 🧮 Concepto Teórico: Las Matemáticas del Acceso Aleatorio
-Para que el acceso aleatorio sea viable, los registros deben tener un **tamaño fijo en bytes**. Imagina un archivo de datos binario donde guardamos fichas de empleados. Cada registro consta de tres campos fijos:
-*   `ID` (tipo entero: ocupa **4 bytes**)
-*   `Edad` (tipo entero: ocupa **4 bytes**)
-*   `Salario` (tipo real de precisión doble: ocupa **8 bytes**)
-*   **Tamaño total del registro**: `4 + 4 + 8 = 16 bytes`
-
-```text
-   Posición en bytes del archivo:
-   0               16              32              48 bytes
-  ┌───────────────┬───────────────┬───────────────┐
-  │  Registro 0   │  Registro 1   │  Registro 2   │
-  │  (Empleado 1) │  (Empleado 2) │  (Empleado 3) │
-  └───────────────┴───────────────┴───────────────┘
-   ▲               ▲               ▲
-   │               │               │
-   │               │               └─ Saltar al Registro 2 ➔ seek(2 * 16) = seek(32 bytes)
-   │               └─ Saltar al Registro 1 ➔ seek(1 * 16) = seek(16 bytes)
-   └─ Saltar al Registro 0 ➔ seek(0 * 16) = seek(0 bytes)
-```
-
-*   **¿Cómo saltaríamos directamente a leer el salario del tercer empleado (Registro 2)?**
-    *   Primero saltamos al inicio del Registro 2: `2 * 16 bytes = 32 bytes`.
-    *   Como el salario está después del `ID` (4 bytes) y de la `Edad` (4 bytes), sumamos ese desplazamiento intermedio (*offset*): `32 + 8 = 40 bytes`.
-    *   Colocamos el puntero directamente allí mediante un salto: `seek(40)`. ¡Leemos la información en microsegundos sin importar el volumen total del archivo!
-
-#### 🚀 Ejemplo Práctico en Java: Lectura, escritura y modificación aleatoria de datos binarios
-Este código demuestra cómo registrar datos binarios con estructura de tamaño fijo y modificar un registro intermedio de forma directa y atómica en disco.
+Podemos utilizar `Path`, `Files` y `StandardOpenOption`:
 
 ```java
-import java.io.RandomAccessFile;
-import java.io.IOException;
+@Override
+public void run(String... args) {
 
-public class RandomAccessManager {
-    public static void main(String[] args) {
-        String filename = "employees.dat";
-        
-        // Estructura de registro de tamaño fijo: ID (4B) + Age (4B) + Salary (8B) = 16 Bytes
-        final int RECORD_SIZE = 16;
-        
-        try (RandomAccessFile raf = new RandomAccessFile(filename, "rw")) {
-            // Vaciar el archivo antes de comenzar a escribir para la simulación
-            raf.setLength(0);
-            
-            // --- ESCRITURA DE DATOS EN DISCO ---
-            // Registro 0 (Clara): ID 1, Edad 25, Salario 100.5
-            raf.writeInt(1);
-            raf.writeInt(25);
-            raf.writeDouble(100.5);
-            
-            // Registro 1 (Pedro): ID 2, Edad 30, Salario 200.0
-            raf.writeInt(2);
-            raf.writeInt(30);
-            raf.writeDouble(200.0);
-            
-            // Registro 2 (Marcus): ID 3, Edad 40, Salario 500.75
-            raf.writeInt(3);
-            raf.writeInt(40);
-            raf.writeDouble(500.75);
-            
-            System.out.println("Three records written in fixed sizes (16 bytes each).");
-            
-            // --- ACCESO DIRECTO ALEATORIO ---
-            // Saltar directamente al inicio del Registro 1 (segundo empleado)
-            raf.seek(1 * RECORD_SIZE);
-            
-            int id = raf.readInt();
-            int age = raf.readInt();
-            double salary = raf.readDouble();
-            
-            System.out.println("
---- Directly read Record 1 ---");
-            System.out.println("ID: " + id + " | Age: " + age + " | Salary: " + salary + " EUR");
-            
-            // --- MODIFICACIÓN DIRECTA ---
-            // Modificar el salario del tercer empleado (Registro 2)
-            // Offset: Saltar al inicio de Registro 2 (2 * 16 = 32B) + Saltarse ID y Edad (8B) = 40B
-            long offset = (2 * RECORD_SIZE) + 8;
-            raf.seek(offset);
-            raf.writeDouble(9999.99); // Sobrescribir el campo salario directamente
-            
-            System.out.println("
-Modified record 2 salary directly in disk.");
-            
-            // --- LEER TODOS LOS REGISTROS PARA VERIFICAR ---
-            raf.seek(0); // Volver al inicio físico del archivo
-            System.out.println("
---- Final Employee Records ---");
-            for (int i = 0; i < 3; i++) {
-                int currentId = raf.readInt();
-                int currentAge = raf.readInt();
-                double currentSalary = raf.readDouble();
-                System.out.println("ID: " + currentId + " | Age: " + currentAge + " | Salary: " + currentSalary + " EUR");
-            }
-            
-        } catch (IOException e) {
-            System.err.println("Random access operation failed: " + e.getMessage());
-        }
+    // Ruta del fichero donde almacenaremos los registros.
+    Path path = Path.of("app.log");
+
+    // Abrimos un BufferedWriter.
+    // CREATE crea el fichero si todavía no existe.
+    // APPEND conserva el contenido y escribe al final.
+    try (BufferedWriter writer = Files.newBufferedWriter(
+            path,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.APPEND)) {
+
+        // Escribimos el mensaje en el fichero.
+        writer.write("Operación registrada correctamente.");
+
+        // Añadimos un salto de línea para separar registros.
+        writer.newLine();
+
+        // Informamos del resultado en el log de la aplicación.
+        log.info("Registro añadido al fichero de logs.");
+
+    } catch (IOException e) {
+
+        // Gestionamos los posibles errores de escritura.
+        log.error("Error al escribir en el fichero de logs", e);
     }
 }
 ```
 
----
+Aquí utilizamos:
 
-### 4.3. Comparativa de Estrategias
+* `Path` para representar la ubicación.
+* `Files.newBufferedWriter()` para obtener un escritor.
+* `CREATE` para crear el fichero si no existe.
+* `APPEND` para conservar el contenido existente y añadir el nuevo al final.
+* `try-with-resources` para cerrar automáticamente el escritor.
 
-| Característica | Acceso Secuencial | Acceso Aleatorio |
-| :--- | :--- | :--- |
-| **Forma de Lectura** | De principio a fin. | Posiciones arbitrarias. |
-| **Velocidad de Búsqueda** | Lenta en datos intermedios de archivos grandes. | Rápida para saltos concretos. |
-| **Complejidad de Gestión** | Baja, el puntero avanza de forma automatizada. | Alta, requiere calcular posiciones físicas en bytes. |
-| **Uso Típico** | Ficheros de configuración, CSV, XML, JSON, logs. | Bases de datos indexadas, archivos multimedia. |
-
----
-
-### 4.4. Acceso Combinado en Aplicaciones Modernas
-En sistemas de producción reales de alta escala, ambas estrategias conviven de forma natural para optimizar el rendimiento global:
-*   **Flujos de Big Data**: Procesamiento secuencial masivo de eventos continuos en colas de mensajería (como Apache Kafka) o logs distribuidos.
-*   **Motores de Búsqueda (Elasticsearch, Lucene)**: Utilizan acceso secuencial para persistir sus registros de transacciones en disco, mientras que realizan búsquedas de acceso aleatorio constante sobre los ficheros de índices para localizar registros en milisegundos.
-*   **Simulación en la Nube**: Los almacenes de objetos en la nube (S3) permiten realizar descargas secuenciales completas del recurso o simular accesos aleatorios solicitando únicamente rangos específicos de bytes del objeto persistido a través de cabeceras seguras de red HTTP, ahorrando ancho de banda y latencia.
+Este patrón combina varias buenas prácticas actuales de la API de ficheros de Java.
 
 ---
 
-## 5. El Ciclo de Vida de las Operaciones sobre Ficheros
+### 5.9. ¿Qué debemos utilizar en Java moderno?
 
-Toda interacción de entrada/salida (E/S) entre el programa y el soporte físico de almacenamiento sigue un flujo compuesto por cuatro fases obligatorias:
+No todas las APIs de ficheros tienen el mismo nivel de abstracción.
+
+| Necesidad                  | Opción recomendada           |
+| -------------------------- | ---------------------------- |
+| Representar una ruta       | `Path`                       |
+| Comprobar existencia       | `Files.exists()`             |
+| Leer texto completo        | `Files.readString()`         |
+| Escribir texto completo    | `Files.writeString()`        |
+| Procesar líneas            | `Files.lines()`              |
+| Leer progresivamente       | `Files.newBufferedReader()`  |
+| Escribir progresivamente   | `Files.newBufferedWriter()`  |
+| Acceso avanzado a bytes    | `FileChannel` + `ByteBuffer` |
+| Acceso directo tradicional | `RandomAccessFile`           |
+
+### ¿Y qué ocurre con `java.io.File` y `RandomAccessFile`?
+
+Siguen formando parte de Java y podemos encontrarlos en aplicaciones existentes, por lo que es importante conocerlos.
+
+Sin embargo, para **código nuevo**, nuestra primera opción debería ser normalmente:
 
 ```text
- 1. APERTURA                  2. PROCESAMIENTO             3. DESPLAZAMIENTO            4. CIERRE
- Solicitar al sistema de      Transferencia de datos       Posicionar manualmente el    Liberar el descriptor,
- archivos un descriptor y     (lectura/escritura) en       puntero mediante direcciones  desbloquear el archivo
- un canal de comunicación. bloques, líneas o bytes. de bytes (opcional).  y volcar las cachés.
+Path + Files
 ```
 
-1.  **Apertura**: El programa solicita un puntero de conexión al sistema de archivos instanciando un flujo de datos (*stream*). Según el caso de uso, el flujo se abre bajo perfiles de solo lectura, escritura destructiva (sobrescritura) o modo de adición (*append*, que posiciona automáticamente el puntero al final del archivo para preservar los datos existentes).
-2.  **Procesamiento (Lectura/Escritura)**: Se realiza la transferencia de información en bloques, líneas o caracteres. El puntero físico avanza automáticamente tras cada operación. Al alcanzar el límite del recurso, el sistema operativo devuelve un valor centinela estándar de finalización (EOF, habitualmente representado por el valor `-1` en los flujos de lectura).
-3.  **Desplazamiento o Salto (Opcional)**: En entornos de acceso aleatorio, se recoloca de forma manual el puntero físico a una posición en bytes específica antes de realizar la siguiente operación de lectura o escritura.
-4.  **Cierre**: Es la fase más crítica del ciclo de vida. Consiste en ordenar la liberación del descriptor del archivo en el sistema operativo, el desbloqueo del recurso y el volcado definitivo (*flush*) a disco de cualquier byte temporal que estuviera retenido en la caché de la memoria RAM del sistema.
+y, cuando necesitamos un control más avanzado sobre la entrada/salida:
+
+```text
+Path + FileChannel + ByteBuffer
+```
+
+`RandomAccessFile` queda como una API clásica que sigue siendo válida y que resulta interesante conocer, especialmente para comprender código existente y determinadas soluciones de acceso aleatorio.
 
 ---
 
-### ⚠️ El peligro latente: Fugas de Recursos (*Resource Leaks*)
-Si el software omite la fase de cierre de los canales de comunicación o esta falla en mitad de la ejecución:
+### 5.10. Resumen del ciclo de vida
+
+Podemos resumir el trabajo con ficheros en Java moderno de la siguiente forma:
 
 ```text
-💥 Consecuencia de Omitir el Cierre (Saturación de Descriptores en el Kernel):
-  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 3
-  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 4
-  ...
-  Proceso Java ➔ Abre Stream sin close() ➔ Ocupa Descriptor FD 1024 [LÍMITE ALCANZADO]
-  
-  Resultante: java.io.IOException: Too many open files (Colapso del servidor)
+                    RUTA
+                     │
+                     ▼
+                   Path
+                     │
+                     ▼
+              ┌─────────────┐
+              │    Files    │
+              └──────┬──────┘
+                     │
+          ┌──────────┼──────────┐
+          │          │          │
+          ▼          ▼          ▼
+       Leer       Escribir   Gestionar
+       datos       datos      fichero
+          │          │
+          └────┬─────┘
+               │
+               ▼
+        ¿Necesitamos
+       acceso avanzado?
+               │
+          ┌────┴────┐
+         NO         SÍ
+          │          │
+          ▼          ▼
+        Files    FileChannel
+                     +
+                 ByteBuffer
+                     │
+                     ▼
+              Cerrar recurso
 ```
 
-*   El archivo puede quedar **bloqueado indefinidamente** por el sistema operativo, impidiendo su edición por otros procesos o la propia aplicación.
-*   Se producirá una **saturación de los descriptores de archivos** en el núcleo del sistema, provocando inestabilidad y caídas en el servidor de aplicaciones.
-*   Existe un alto riesgo de **corrupción o pérdida de datos** al no garantizar el volcado final (*flush*) de las memorias RAM volátiles intermedias al disco duro físico.
+> **Idea clave**
+>
+> En Java moderno, comenzamos normalmente con **`Path` + `Files`**.
+>
+> Para ficheros pequeños y operaciones sencillas podemos utilizar `readString()` y `writeString()`.
+>
+> Para ficheros grandes o procesamiento progresivo podemos utilizar `lines()`, lectores y escritores.
+>
+> Cuando necesitamos un control más avanzado sobre bytes y posiciones, podemos utilizar **`FileChannel` + `ByteBuffer`**.
+>
+> Y cuando trabajamos con recursos abiertos, **try-with-resources** es la forma recomendada de garantizar su cierre.
 
-```text
-🛡️ Garantía de Seguridad con Try-With-Resources (Java 7+):
-  try (BufferedWriter writer = new BufferedWriter(new FileWriter("app.log"))) {
-      writer.write("Operational log");
-  } // <--- El compilador inyecta un bloque finally que ejecuta writer.close()
-    //      de forma garantizada, incluso si se lanza una RuntimeException.
-```
-
-💡 **Directriz de Diseño (Try-With-Resources)**: Para automatizar el cierre seguro, el software moderno se estructura mediante bloques de control autocerrables. Al implementar las clases de flujos la interfaz `AutoCloseable`, el compilador garantiza la liberación inmediata de todos los recursos en disco al finalizar las operaciones de forma transparente para el programador, incluso ante excepciones imprevistas en tiempo de ejecución.
-
-#### 🚀 Ejemplo Práctico en Java: Escritura de texto segura utilizando Try-With-Resources
-Este código muestra cómo garantizar que el archivo se cierre de manera automática y limpia pase lo que pase durante la escritura física de datos.
-
-```java
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
-
-public class SafeFileWriter {
-    public static void main(String[] args) {
-        // La inicialización en la firma del try garantiza la autoliberación al finalizar
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("safe_output.txt", true))) {
-            // Escribir contenido y realizar un salto de línea nativo del sistema
-            writer.write("Safe transaction recorded.");
-            writer.newLine();
-            System.out.println("Data saved successfully. Stream closed automatically.");
-            
-        } catch (IOException e) {
-            // Control de excepciones en caso de fallo físico de escritura
-            System.err.println("Failed to write securely to disk: " + e.getMessage());
-        }
-    }
-}
-```
-
----
 
 ## 6. Jerarquía de Flujos de Datos (*Streams*) y Patrón Decorador
 
