@@ -2168,7 +2168,7 @@ No todas las APIs de ficheros tienen el mismo nivel de abstracción.
 | Acceso avanzado a bytes    | `FileChannel` + `ByteBuffer` |
 | Acceso directo tradicional | `RandomAccessFile`           |
 
-### ¿Y qué ocurre con `java.io.File` y `RandomAccessFile`?
+#### ¿Y qué ocurre con `java.io.File` y `RandomAccessFile`?
 
 Siguen formando parte de Java y podemos encontrarlos en aplicaciones existentes, por lo que es importante conocerlos.
 
