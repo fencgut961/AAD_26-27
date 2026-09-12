@@ -1619,7 +1619,7 @@ No necesitamos leer previamente los registros 0 y 1 para situarnos en el Registr
 | Ejemplo Java                | `Files.lines()`      | `RandomAccessFile`                      |
 | Uso típico                  | Procesar información | Consultar/modificar registros concretos |
 
-### Una forma sencilla de recordarlo
+#### Una forma sencilla de recordarlo
 
 ```text
 SECUENCIAL
