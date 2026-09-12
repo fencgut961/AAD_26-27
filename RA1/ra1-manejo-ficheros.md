@@ -92,7 +92,8 @@ La interacción del software con los datos almacenados ha pasado por tres grande
         │ 1350.00 €        │
         └──────────────────┘
 
-[Simulador de Árbol B (B-Tree)](https://meskeia.com/simulador-arboles-b/)
+[Simulador de árboles B](https://meskeia.com/simulador-arboles-b/)
+
 ```
 
 3.  **Era de la Interconectividad y el Big Data**: Con la expansión de Internet y la comunicación entre sistemas heterogéneos, los ficheros volvieron a cobrar protagonismo como formato estándar de intercambio. Surgieron formatos universales legibles por humanos (CSV, XML, JSON, YAML). Además, la explosión del Big Data implicó trabajar con volúmenes masivos de datos en sistemas de archivos distribuidos (como HDFS en Hadoop) o almacenes de objetos en la nube (como Amazon S3, Google Cloud Storage o Azure Blob Storage) accesibles mediante APIs.
