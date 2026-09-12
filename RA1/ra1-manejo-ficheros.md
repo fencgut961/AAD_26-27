@@ -2781,7 +2781,7 @@ La **clave pública se puede compartir**.
 
 La **clave privada no se comparte**.
 
-### 2. Cifrar un mensaje
+#### 2. Cifrar un mensaje
 
 Creamos un mensaje para un compañero.
 
