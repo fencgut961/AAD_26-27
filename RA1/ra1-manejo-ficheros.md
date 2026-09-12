@@ -56,10 +56,12 @@ La interacción del software con los datos almacenados ha pasado por tres grande
 
 ```text
 📄 Ejemplo de Registro en Fichero Plano (Longitud Fija COBOL/DAT):
+
   Posición de Bytes: [0...3] [4...............23] [24............38] [39......46]
   Campos Fijos:      [ ID  ] [      Nombre      ] [     Puesto     ] [  Salario ]
   Registro 1:        0001    Clara Oswald         Shop Manager       02550.00
   Registro 2:        0002    Pedro Almodovar      Clerk              01350.00
+
   ➔ Inconveniente: Para buscar al empleado 2, el sistema debe leer obligatoriamente los 47 bytes del Registro 1.
 ```
 
@@ -164,31 +166,101 @@ spring:
     url: jdbc:postgresql://localhost:5432/aadtex_db
 ```
 
-*   **Procesamiento Masivo**: Soporte esencial para Big Data, Machine Learning y procesos de extracción, transformación y carga (ETL).
+*   **Procesamiento Masivo**: Soporte esencial para Big Data, Machine Learning y procesos de **Extracción**, **Transformación** y **Carga** [ETL](./ETL.png).
 *   **Integración con la Nube**: Subir, descargar, versionar e interactuar con ficheros remotos de forma automatizada.
 
 ---
 
-### 1.4. Almacenamiento en la Nube: Buckets y Almacenamiento de Objetos (Object Storage)
 
-En la arquitectura de aplicaciones modernas desplegadas en la nube (AWS, Google Cloud, Microsoft Azure), la gestión de archivos ha evolucionado desde los sistemas de archivos locales hacia el **Almacenamiento de Objetos (Object Storage)** organizado en **Buckets**.
+### 1.4. Almacenamiento en la Nube: Buckets y Object Storage
 
-#### 🪣 ¿Qué es un Bucket y cómo se diferencia de un Sistema de Archivos Local?
+Cuando trabajamos con archivos en un ordenador, normalmente utilizamos un **sistema de archivos**:
 
-Un **Bucket** es un contenedor lógico en la nube que almacena datos en forma de **objetos** dentro de un espacio de nombres totalmente plano (*flat namespace*), a diferencia de la estructura de árbol jerárquica con carpetas e inodos de los sistemas de archivos tradicionales (FAT32, NTFS, ext4).
+```text
+💻 DISCO LOCAL
 
+📁 documentos
+   ├── 📄 informe.pdf
+   └── 📄 datos.json
 
+📁 fotos
+   ├── 🖼️ foto1.jpg
+   └── 🖼️ foto2.jpg
+````
 
-#### 🔑 Conceptos Clave de Object Storage en la Nube:
-1. **Espacio de Nombres Plano (Key-Value)**: No existen "carpetas reales" en un Bucket. La apariencia de directorios (como ) es solo un truco visual logrado usando el carácter diagonal  dentro de la **Clave (Key)** del objeto.
-2. **Inmutabilidad de los Objetos**: Los archivos en un Bucket son atómicos e inmutables. No se puede modificar un byte individual a mitad de un archivo como en un disco local; para actualizar un objeto se sube una nueva versión completa que reemplaza o versiona a la anterior.
-3. **Escalabilidad Infinita y Durabilidad**: Los proveedores de nube garantizan una durabilidad del 99.999999999% (los llamados "11 nueves"), replicando los bytes del objeto automáticamente en múltiples centros de datos físicos.
-4. **Acceso mediante APIs REST HTTP/HTTPS**: Los archivos en la nube no se leen abriendo descriptores del sistema operativo (), sino realizando peticiones web seguras de red (, , ) mediante SDKs oficiales del proveedor.
+En la nube podemos utilizar **Object Storage**, donde los archivos se almacenan como **objetos dentro de un bucket**:
 
-#### 🚀 Ejemplo Práctico en Java: Operaciones con Buckets de Amazon S3 (AWS SDK v2)
-Este código muestra cómo una aplicación Spring Boot interactúa con un Bucket en la nube para verificar la existencia de un contenedor, subir un archivo encriptado y descargarlo mediante el cliente oficial de AWS.
+```text
+☁️ OBJECT STORAGE
 
+🪣 mi-bucket
+   ├── documentos/informe.pdf
+   ├── documentos/datos.json
+   ├── fotos/foto1.jpg
+   └── fotos/foto2.jpg
+```
 
+### 🪣 ¿Qué es un Bucket?
+
+Un **bucket** es simplemente un **contenedor para almacenar objetos**.
+
+Un objeto está formado principalmente por:
+
+```text
+📦 OBJETO
+
+┌───────────────────────────────────┐
+│ 🔑 Key: fotos/foto1.jpg           │
+│ 📄 Datos: contenido del archivo   │
+│ ℹ️ Metadatos                      │
+└───────────────────────────────────┘
+```
+
+La **Key** es el nombre que identifica al objeto.
+
+Por ejemplo:
+
+```text
+fotos/foto1.jpg
+```
+
+Aunque parece que `fotos` es una carpeta, **en Object Storage normalmente forma parte del nombre (Key) del objeto**.
+
+### 🔑 ¿Qué diferencia hay con un archivo local?
+
+| Sistema de archivos                        | Object Storage                              |
+| ------------------------------------------ | ------------------------------------------- |
+| 📁 Carpetas y archivos                     | 🪣 Buckets y objetos                        |
+| El sistema operativo gestiona los archivos | Se accede mediante APIs                     |
+| Se puede modificar una parte del archivo   | Normalmente se reemplaza el objeto completo |
+| Acceso mediante el sistema de archivos     | Acceso mediante HTTP/HTTPS                  |
+| Ej.: NTFS, ext4                            | Ej.: Amazon S3                              |
+
+### 🚀 Ejemplo con Java
+
+Una aplicación **Spring Boot** puede utilizar un SDK para comunicarse con un servicio de Object Storage:
+
+```text
+┌──────────────────┐
+│   Spring Boot    │
+│    Aplicación    │
+└────────┬─────────┘
+         │
+         │ AWS SDK
+         ▼
+┌──────────────────┐
+│    Amazon S3     │
+│                  │
+│ 🪣 mi-bucket     │
+│  ├─ foto.jpg     │
+│  ├─ datos.json   │
+│  └─ informe.pdf  │
+└──────────────────┘
+```
+
+La aplicación puede **subir, descargar, consultar o eliminar objetos** mediante la API de S3.
+
+> 💡 **Idea clave:** Un **bucket** es un contenedor en la nube y un **objeto** es el archivo almacenado dentro de él. La aplicación accede a estos objetos mediante una **API**, no directamente mediante el sistema de archivos del ordenador.
 
 ---
 
@@ -200,7 +272,7 @@ Aunque a nivel de hardware todos los ficheros son secuencias binarias de bytes, 
 Están compuestos por bytes que representan **caracteres codificados bajo un estándar específico** (normalmente UTF-8).
 
 ```text
-  💡 ANALOGÍA INTUITIVA
+  💡 ANALOGÍA
   Un fichero de texto es como una carta escrita a mano: cualquier persona que conozca
   el alfabeto (la codificación) puede abrirla y leer su contenido directamente.
 ```
@@ -216,37 +288,26 @@ Están compuestos por bytes que representan **caracteres codificados bajo un est
 Este código permite crear un archivo, escribir datos de texto en formato estructurado CSV y recuperarlos de forma portable.
 
 ```java
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
-import java.nio.charset.StandardCharsets;
-import java.io.IOException;
+public void run(String... args) {
+    Path path = Paths.get("students.csv");
 
-public class TextFileProcessor {
-    public static void main(String[] args) {
-        // Definir la ruta del fichero utilizando la API NIO.2
-        Path path = Paths.get("students.csv");
-        
-        try {
-            // Datos en formato CSV estructurado
-            String csvData = "ID,Name,Role
-1,Sophia,Developer
-2,Marcus,Project Manager";
-            
-            // Escribir el contenido en el fichero forzando la codificación UTF-8
-            Files.writeString(path, csvData, StandardCharsets.UTF_8);
-            System.out.println("File written successfully using UTF-8.");
-            
-            // Leer el contenido completo del fichero en un String
-            String retrievedContent = Files.readString(path, StandardCharsets.UTF_8);
-            System.out.println("
---- Retrieved Content ---");
-            System.out.println(retrievedContent);
-            
-        } catch (IOException e) {
-            // Gestionar posibles excepciones de entrada y salida
-            System.err.println("Error processing the text file: " + e.getMessage());
-        }
+    try {
+        String csvData = """
+                ID,Name,Role
+                1,Sophia,Developer
+                2,Marcus,Project Manager
+                """;
+
+        Files.writeString(path, csvData, StandardCharsets.UTF_8);
+        log.info("Fichero escrito correctamente: {}", path);
+
+        String retrievedContent = Files.readString(path, StandardCharsets.UTF_8);
+
+        log.info("--- Contenido recuperado ---");
+        log.info("\n{}", retrievedContent);
+
+    } catch (IOException e) {
+        log.error("Error al procesar el fichero", e);
     }
 }
 ```
@@ -254,10 +315,10 @@ public class TextFileProcessor {
 ---
 
 ### 2.2. Ficheros Binarios
-Almacenan información en formato de **bytes crudos**, codificados siguiendo una especificación técnica de bajo nivel.
+Almacenan información en formato de **bytes raw**, codificados siguiendo una especificación técnica de bajo nivel.
 
 ```text
-  💡 ANALOGÍA INTUITIVA
+  💡 ANALOGÍA
   Un fichero binario es como un código QR o una cinta perforada: a simple vista parece
   una secuencia incomprensible de marcas, pero un lector especializado (el software correcto)
   puede traducirlo instantáneamente en una imagen, un sonido o un programa ejecutable.
@@ -281,115 +342,32 @@ Almacenan información en formato de **bytes crudos**, codificados siguiendo una
 Este código muestra cómo procesar secuencialmente los bytes de un archivo binario (como una imagen) de forma eficiente y segura.
 
 ```java
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.IOException;
+public void run(String... args) {
+    File file = new File("image.jpg");
 
-public class BinaryFileInspector {
-    public static void main(String[] args) {
-        // Referencia al archivo binario de origen
-        File binaryFile = new File("image.jpg");
-        
-        // Verificar existencia previa para evitar fallos
-        if (!binaryFile.exists()) {
-            System.out.println("Please provide an 'image.jpg' file in the root directory to run this test.");
-            return;
-        }
-        
-        // Uso de try-with-resources para asegurar el cierre de flujos binarios
-        try (BufferedInputStream input = new BufferedInputStream(new FileInputStream(binaryFile))) {
-            byte[] buffer = new byte[1024]; // Bloque temporal de 1 KB para transferencia rápida
+    if (!file.exists()) {
+        log.warn("No se encuentra el fichero '{}'", file.getName());
+    } else {
+        try (BufferedInputStream input =
+                     new BufferedInputStream(new FileInputStream(file))) {
+
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] buffer = new byte[4096];
             int bytesRead;
-            int totalBytes = 0;
-            
-            // Leer secuencialmente bloques de bytes hasta llegar al final (-1)
+
             while ((bytesRead = input.read(buffer)) != -1) {
-                totalBytes += bytesRead;
+                digest.update(buffer, 0, bytesRead);
             }
-            
-            System.out.println("Binary file read successfully.");
-            System.out.println("Total physical size: " + totalBytes + " bytes.");
-            
-        } catch (IOException e) {
-            // Controlar excepciones si ocurre algún fallo en el flujo físico
-            System.err.println("Exception occurred during binary processing: " + e.getMessage());
-        }
-    }
-}
-```
 
-#### 🖼️ Concepto Avanzado: ¿Cómo traduce el software un archivo binario para renderizarlo en la consola?
-Un gran ejemplo de manipulación binaria e interpretación de datos es cargar una imagen (`image.jpg`) y dibujarla directamente en una consola de texto en base a sus píxeles físicos. El software sigue este flujo de mapeo y transformación:
+            String hash = HexFormat.of().formatHex(digest.digest());
 
-```text
-  [ Archivo Binario .JPG ] ➔ Descifrado de bytes ➔ [ Matriz de Píxeles de Color ]
-                                                           │
-        ┌──────────────────────────────────────────────────┴──────────────────────────────────────────────────┐
-        ▼ (Aproximación Escala de Grises)                                                                     ▼ (Aproximación Bloques ANSI Color)
-  1. Escalar la imagen a tamaño consola.                                                       1. Escalar la imagen a tamaño consola.
-  2. Traducir el color de cada píxel a escala de grises.                                       2. Obtener el color exacto (Rojo, Verde, Azul).
-  3. Mapear el nivel de gris a un carácter tipográfico.                                        3. Emitir el código de escape de color ANSI de 24 bits.
-     - Píxel Oscuro ➔ Carácter '@' o '#'                                                           4. Imprimir un bloque sólido "█" pintado con ese color.
-     - Píxel Claro  ➔ Carácter ',' o '.'
-```
+            log.info("📄 Fichero: {}", file.getName());
+            log.info("📦 Tamaño: {} KB", file.length() / 1024);
+            log.info("🔐 SHA-256: {}", hash);
 
-*   **El truco del bloque doble (▀ / ▄) para alta definición**: Un carácter de consola estándar es más alto que ancho. Para corregir la proporción del aspecto de la imagen y duplicar la resolución vertical de renderizado en consola, los programas avanzados procesan los píxeles de dos en dos verticalmente. El píxel superior define el **color de fuente** del carácter, el píxel inferior define el **color de fondo** del carácter, y se imprime el símbolo del bloque superior coloreado (`▀`). ¡Esto permite representar dos píxeles verticales reales en el espacio de un único carácter de texto!
-
-#### 🚀 Ejemplo Práctico en Java: Renderizado en consola usando código de color ANSI y bloques dobles (▀)
-Este ejemplo avanzado es un código completamente funcional que tus alumnos pueden copiar y pegar para cargar una imagen local y renderizarla a color de 24 bits dentro de su propia terminal de desarrollo de IntelliJ.
-
-```java
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-
-public class ConsoleImageRenderer {
-    public static void main(String[] args) {
-        File imageFile = new File("image.jpg");
-        
-        if (!imageFile.exists()) {
-            System.out.println("Please place an 'image.jpg' in the root folder to see the rendering.");
-            return;
-        }
-        
-        try {
-            // Leer el archivo binario JPG y decodificarlo a matriz en memoria
-            BufferedImage originalImage = ImageIO.read(imageFile);
-            
-            // Escalar la imagen para adaptarla a las dimensiones de la consola
-            int consoleWidth = 80;
-            int consoleHeight = (originalImage.getHeight() * consoleWidth) / originalImage.getWidth();
-            
-            BufferedImage scaledImage = new BufferedImage(consoleWidth, consoleHeight, BufferedImage.TYPE_INT_RGB);
-            scaledImage.getGraphics().drawImage(originalImage, 0, 0, consoleWidth, consoleHeight, null);
-            
-            System.out.println("--- Console 24-bit Double Block Rendering ---");
-            
-            // Procesar píxeles de dos en dos verticalmente para el truco de bloques dobles
-            for (int y = 0; y < consoleHeight - 1; y += 2) {
-                for (int x = 0; x < consoleWidth; x++) {
-                    // Extraer color del píxel superior de la celda
-                    Color topPixelColor = new Color(scaledImage.getRGB(x, y));
-                    // Extraer color del píxel inferior de la celda
-                    Color bottomPixelColor = new Color(scaledImage.getRGB(x, y + 1));
-                    
-                    // Ensamblar la cadena con códigos ANSI para color de fuente (top) y fondo (bottom)
-                    String colorString = "[38;2;" + topPixelColor.getRed() + ";" + topPixelColor.getGreen() + ";" + topPixelColor.getBlue() + "m" +
-                                         "[48;2;" + bottomPixelColor.getRed() + ";" + bottomPixelColor.getGreen() + ";" + bottomPixelColor.getBlue() + "m" +
-                                         "▀"; // Carácter especial de bloque superior coloreado
-                    
-                    System.out.print(colorString);
-                }
-                // Restablecer estilos al final de cada línea de la consola
-                System.out.print("[0m
-");
-            }
-            
-        } catch (IOException e) {
-            System.err.println("Failed to render the image in console: " + e.getMessage());
+        } catch (IOException | NoSuchAlgorithmException e) {
+            log.error("Error al procesar el fichero", e);
         }
     }
 }

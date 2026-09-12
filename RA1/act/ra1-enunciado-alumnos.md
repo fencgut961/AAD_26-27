@@ -2,8 +2,7 @@
 ## Sistema de Ingestión, Cifrado, Transcodificación, Auditoría Nocturna, Validación de Parejas y Programación de Tareas (Scheduler)
 
 **Módulo:** Acceso a Datos (AAD)  
-**Unidad Didáctica:** UD01 – Manejo de Ficheros (RA1)  
-**Duración Estimada:** 4 Horas  
+**RA1:** Manejo de Ficheros (RA1)  
 **Entregables:** Repositorio **GitHub** con el proyecto Spring Boot / Java, archivo **`ra1_act1.zip`** subido a Moodle y defensa oral presencial.
 
 ---
