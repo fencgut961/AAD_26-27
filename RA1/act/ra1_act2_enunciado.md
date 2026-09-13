@@ -129,12 +129,14 @@ La **App 2** utiliza como punto de entrada exclusivo la carpeta **`/workspace/st
 
 ---
 
-## 5. Normativa Oficial de Entrega Moodle y Defensa Oral
+## 5. Entrega Moodle y Defensa
 
 1. **Entrega en Moodle (`ra1_act2.zip`)**:
-   - Subida exclusivamente en Moodle en un único archivo comprimido ZIP denominado exactamente **`ra1_act2.zip`**.
-   - Debe contener todo el proyecto Spring Boot de la App 2 listo para compilar y ejecutar.
+   - La entrega se realizará exclusivamente a través de la plataforma **Moodle** subiendo un único archivo comprimido en formato ZIP denominado estrictamente **`ra1_act2.zip`**.
+   - El archivo `.zip` debe contener todo el proyecto Spring Boot estructurado y listo con sus archivos de datos de prueba para que, al descomprimirlo, ejecutarse sin requerir ajustes adicionales.
 2. **Vincular Repositorio GitHub en `README.md`**:
-   - El archivo `README.md` en la raíz del proyecto debe incluir el enlace directo al repositorio de GitHub.
-3. **Defensa Oral Presencial**:
-   - El profesor evaluará el proyecto ejecutando la App 2 sobre la salida de la App 1 y realizando preguntas sobre el código Java 17.
+   - En la raíz del proyecto, el archivo **`README.md`** debe incluir obligatoriamente un enlace directo (*link*) al repositorio de GitHub donde se encuentra alojado el código fuente versionado.
+3. **Defensa Presencial**:
+   - Para la defensa presencial, se utilizará **únicamente el contenido del archivo `ra1_act2.zip` entregado en Moodle**.
+   - La aplicación deberá arrancar con normalidad (`mvn spring-boot:run` o desde el IDE) y demostrar el procesamiento automatizado en tiempo real.
+   - El alumno responderá de forma individual a preguntas teóricas y/o prácticas sobre la solución desarrollada.

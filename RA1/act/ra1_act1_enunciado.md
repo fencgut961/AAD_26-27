@@ -114,14 +114,14 @@ Cada noche a las 03:00 AM, **cada tienda deposita un lote (*batch*)** en la carp
 
 ---
 
-## 5. Normativa Oficial de Entrega Moodle y Defensa Oral
+## 5. Entrega Moodle y Defensa
 
 1. **Entrega en Moodle (`ra1_act1.zip`)**:
    - La entrega se realizará exclusivamente a través de la plataforma **Moodle** subiendo un único archivo comprimido en formato ZIP denominado estrictamente **`ra1_act1.zip`**.
-   - El archivo `.zip` debe contener todo el proyecto Spring Boot estructurado y listo con sus archivos de datos de prueba para que, al descomprimirlo, pueda compilarse y ejecutarse sin requerir ajustes adicionales.
+   - El archivo `.zip` debe contener todo el proyecto Spring Boot estructurado y listo con sus archivos de datos de prueba para que, al descomprimirlo, ejecutarse sin requerir ajustes adicionales.
 2. **Vincular Repositorio GitHub en `README.md`**:
    - En la raíz del proyecto, el archivo **`README.md`** debe incluir obligatoriamente un enlace directo (*link*) al repositorio de GitHub donde se encuentra alojado el código fuente versionado.
-3. **Defensa Oral Presencial**:
-   - Para la defensa presencial, el profesor utilizará **únicamente el contenido del archivo `ra1_act1.zip` entregado en Moodle**.
+3. **Defensa Presencial**:
+   - Para la defensa presencial, se utilizará **únicamente el contenido del archivo `ra1_act1.zip` entregado en Moodle**.
    - La aplicación deberá arrancar con normalidad (`mvn spring-boot:run` o desde el IDE) y demostrar el procesamiento automatizado en tiempo real.
    - El alumno responderá de forma individual a preguntas teóricas y/o prácticas sobre la solución desarrollada.
