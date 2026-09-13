@@ -1,9 +1,8 @@
-# 🌐 UD01 - Práctica 2: AadTex Cloud Dispatcher & Advanced Transport (App 2)
+# 🌐 RA1_ACT2: AadTex Cloud Dispatcher & Advanced Transport (App 2)
 ## Escaneo Recursivo (Files.walk), Integridad SHA-256, Codificación Base64, Reporte Cloud JSON v2.0, Réplicas Zero-Copy (FileChannel) y Exportación Multi-Charset
 
 **Módulo:** Acceso a Datos (AAD)  
-**Unidad Didáctica:** UD01 – Manejo de Ficheros (RA1 - Nivel Avanzado)  
-**Duración Estimada:** 4 Horas  
+**RA1:** Manejo de Ficheros (Avanzado)  
 **Entregables:** Repositorio **GitHub** con el proyecto Spring Boot / Java, archivo **`ra1_act2.zip`** subido a Moodle y defensa oral presencial.
 
 ---
