@@ -1,16 +1,14 @@
 # 🏬 UD01 - Práctica 1: AadTex Store Ingestion Engine (App 1)
 ## Sistema de Ingestión, Descompresión ZIP, Cifrado AES, Transcodificación UTF-8, Buffers y Programación de Tareas (Scheduler)
 
-**Módulo:** Acceso a Datos (AAD)  
-**Unidad Didáctica:** UD01 – Manejo de Ficheros (RA1)  
-**Duración Estimada:** 4 Horas  
+**Módulo:** Acceso a Datos (AAD) 
+**RA1:** Manejo de Ficheros
 **Entregables:** Repositorio **GitHub** con el proyecto Spring Boot / Java, archivo **`ra1_act1.zip`** subido a Moodle y defensa oral presencial.
 
 ---
 
 ## 1. Contexto de Negocio Empresarial (Caso AadTex v1.0)
 
-### ❓ ¿Cuál es el problema real que estamos resolviendo?
 Una multinacional textil con tiendas físicas distribuidas por todo el mundo (**AadTex**) necesita **centralizar e ingerir automáticamente cada noche las ventas, balances financieros e imágenes de firmas de todas sus tiendas** (España, EE. UU., China, etc.) sin intervención humana manual.
 
 Sin un pipeline de ingeniería de software automatizado, la empresa sufre problemas de integración críticos:
@@ -119,9 +117,11 @@ Cada noche a las 03:00 AM, **cada tienda deposita un lote (*batch*)** en la carp
 ## 5. Normativa Oficial de Entrega Moodle y Defensa Oral
 
 1. **Entrega en Moodle (`ra1_act1.zip`)**:
-   - Subida exclusivamente en Moodle en un único archivo comprimido ZIP denominado exactamente **`ra1_act1.zip`**.
-   - Debe contener todo el proyecto Spring Boot listo para compilar y ejecutar con sus datos de prueba.
+   - La entrega se realizará exclusivamente a través de la plataforma **Moodle** subiendo un único archivo comprimido en formato ZIP denominado estrictamente **`ra1_act1.zip`**.
+   - El archivo `.zip` debe contener todo el proyecto Spring Boot estructurado y listo con sus archivos de datos de prueba para que, al descomprimirlo, pueda compilarse y ejecutarse sin requerir ajustes adicionales.
 2. **Vincular Repositorio GitHub en `README.md`**:
-   - El archivo `README.md` en la raíz del proyecto debe incluir obligatoriamente el enlace directo al repositorio de GitHub.
+   - En la raíz del proyecto, el archivo **`README.md`** debe incluir obligatoriamente un enlace directo (*link*) al repositorio de GitHub donde se encuentra alojado el código fuente versionado.
 3. **Defensa Oral Presencial**:
-   - El profesor evaluará el proyecto ejecutando el archivo `.zip` de Moodle y realizando preguntas sobre el código Java 17.
+   - Para la defensa presencial, el profesor utilizará **únicamente el contenido del archivo `ra1_act1.zip` entregado en Moodle**.
+   - La aplicación deberá arrancar con normalidad (`mvn spring-boot:run` o desde el IDE) y demostrar el procesamiento automatizado en tiempo real.
+   - El alumno responderá de forma individual a preguntas teóricas y/o prácticas sobre la solución desarrollada.
