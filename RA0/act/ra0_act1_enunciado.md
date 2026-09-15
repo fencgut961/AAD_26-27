@@ -9,9 +9,9 @@ En este reto tendréis que analizar un problema realista, identificar las entida
 El reto se realizará en dos fases:
 
 1. **Diseño en la pizarra:** análisis del problema y diseño del modelo UML.
-2. **Implementación en IntelliJ:** desarrollo de la solución en Java y Spring Boot.
+2. **Implementación en IntelliJ:** desarrollo de la solución en Java, Spring Boot y JUnit.
 
-> **Importante:** no comencéis a programar hasta haber terminado el diseño inicial.
+> ⚠️ **Importante:** no comencéis a programar hasta haber terminado el diseño inicial en la pizarra.
 
 ---
 
@@ -48,10 +48,10 @@ Pregúntate:
 * ¿Existen objetos que compartan características?
 * ¿Hay diferentes tipos de empleados?
 * ¿Qué relaciones existen entre ellos?
-* ¿Qué información puede repetirse?
-* ¿Qué relaciones pueden ser de uno a muchos o de muchos a muchos?
+* ¿Qué relaciones son de uno a muchos o de muchos a muchos?
 * ¿Qué comportamiento debería depender del tipo de empleado?
 * ¿Qué información debería representarse mediante un `enum`?
+* ¿Qué colecciones serían adecuadas para representar las relaciones?
 
 Todas estas decisiones deberán quedar reflejadas en vuestro **diagrama de clases UML**.
 
@@ -59,9 +59,9 @@ Todas estas decisiones deberán quedar reflejadas en vuestro **diagrama de clase
 
 # 👥 3. Empleados
 
-El sistema debe permitir representar, como mínimo, dos grandes grupos de empleados:
+El sistema debe permitir representar, como mínimo, dos grandes grupos de empleados.
 
-### Personal de tienda
+## Personal de tienda
 
 Un empleado de tienda tiene:
 
@@ -77,7 +77,7 @@ Los roles disponibles son:
 * `CLERK`
 * `SHOP_MANAGER`
 
-### Personal de IT
+## Personal de IT
 
 Un empleado de tecnología tiene:
 
@@ -97,8 +97,6 @@ Los roles disponibles son:
 * `PROJECT_MANAGER`
 
 ### 💭 Para debatir
-
-Antes de diseñar las clases, plantead:
 
 > ¿Tiene sentido crear una única clase `Employee` con todos estos atributos?
 
@@ -166,7 +164,7 @@ Por ejemplo:
 
 > ¿Tiene sentido que un `CLERK` tenga como supervisor directo a un `DEVELOPER`?
 
-No existe una única respuesta correcta: **lo importante es justificar vuestra decisión de diseño**.
+No existe necesariamente una única respuesta correcta: **lo importante es justificar vuestra decisión de diseño**.
 
 ---
 
@@ -244,14 +242,14 @@ Cada empleado tiene un salario bruto que se obtiene a partir de su salario base 
 
 Además, se aplica una retención en función del rol del empleado.
 
-### Personal de tienda
+## Personal de tienda
 
 | Rol            | Retención |
 | -------------- | --------: |
 | `CLERK`        |      10 % |
 | `SHOP_MANAGER` |      12 % |
 
-### Personal de IT
+## Personal de IT
 
 | Rol               | Retención |
 | ----------------- | --------: |
@@ -261,13 +259,23 @@ Además, se aplica una retención en función del rol del empleado.
 
 El sistema deberá obtener finalmente el **salario neto**.
 
+### 💭 Para debatir
+
+> ¿Dónde debería vivir la lógica específica del cálculo de la nómina?
+
+> ¿Qué comportamiento es común a todos los empleados?
+
+> ¿Qué comportamiento cambia según el tipo de empleado?
+
+> ¿Debería el porcentaje de retención formar parte de los propios `enum`?
+
 ---
 
-# 🧠 9. Una decisión importante de diseño
+# 🧠 9. Polimorfismo: no preguntes qué eres
 
 El servicio encargado de procesar las nóminas debe poder trabajar con cualquier tipo de empleado.
 
-Por ejemplo, conceptualmente:
+Conceptualmente:
 
 ```text
 para cada empleado
@@ -282,13 +290,7 @@ Por tanto, no se permitirá utilizar:
 instanceof
 ```
 
-ni construir un gran bloque de:
-
-```java
-if / else if / else
-```
-
-para decidir qué tipo de empleado es.
+ni construir un gran bloque de `if / else if / else` para decidir qué tipo de empleado es.
 
 El comportamiento deberá resolverse mediante **polimorfismo**.
 
@@ -306,7 +308,7 @@ El comportamiento deberá resolverse mediante **polimorfismo**.
 
 Imaginad que dentro de unos meses AadTex crea una nueva división:
 
-### 🚚 Logística
+## 🚚 Logística
 
 Aparecen nuevos empleados con:
 
@@ -317,15 +319,13 @@ Aparecen nuevos empleados con:
 
 El código que actualmente procesa las nóminas **no debería necesitar modificaciones** para incorporar esta nueva categoría.
 
-El objetivo es que podamos incorporar el nuevo comportamiento creando las clases necesarias en el dominio.
-
 ### 🎯 Test del minuto
 
 Pregúntate:
 
 > **Si mañana aparece un nuevo tipo de empleado, ¿cuántos lugares de mi programa tendría que modificar?**
 
-Cuanto menor sea ese número, mejor será vuestro diseño.
+El objetivo es aplicar correctamente el principio **Open/Closed**.
 
 ---
 
@@ -398,66 +398,137 @@ Para los mensajes por consola se utilizará el logger de Lombok mediante `@Slf4j
 
 ---
 
-# 🔒 13. Requisitos técnicos
+# 🧪 13. Pruebas automatizadas con JUnit
 
-La solución deberá cumplir estas condiciones:
+Además de comprobar manualmente el funcionamiento de la aplicación, utilizaremos **JUnit** para crear pruebas automatizadas.
+
+El objetivo es recordar cómo comprobar mediante código que nuestro programa se comporta como esperamos.
+
+No es necesario crear una batería exhaustiva de pruebas. Nos centraremos en los comportamientos más importantes.
+
+Como mínimo, probaremos:
+
+### 💰 Nóminas
+
+Diferentes casos de cálculo de nómina, incluyendo los distintos roles.
+
+Por ejemplo:
+
+```text
+DADO un empleado con:
+
+Salario base: 1500 €
+Bonus:          200 €
+Rol:           CLERK
+
+CUANDO se procesa su nómina
+
+ENTONCES:
+
+Bruto = 1700 €
+Neto  = 1530 €
+```
+
+El test deberá comprobar automáticamente que el resultado obtenido coincide con el esperado.
+
+### 🗄️ Repositorio
+
+También probaremos el repositorio en memoria:
+
+* Guardar un empleado.
+* Buscar un empleado.
+* Obtener los empleados.
+* Eliminar un empleado.
+* Comprobar qué ocurre cuando buscamos un empleado que no existe.
+
+### 🔗 Relaciones
+
+Podremos crear pruebas para comprobar algunos comportamientos del modelo:
+
+* Asociación con un centro de trabajo.
+* Asignación de equipamiento.
+* Asignación de proyectos.
+* Relación de supervisión.
+
+### 🚫 Importante
+
+Los tests deben comprobar **comportamiento real**.
+
+No sirve simplemente con comprobar que un objeto no es `null` o utilizar una aserción que siempre sea verdadera.
+
+La idea es que, si introducimos un error en el código, **alguna de nuestras pruebas sea capaz de detectarlo**.
+
+---
+
+# ⚙️ 14. Requisitos técnicos
+
+La aplicación deberá utilizar:
 
 * Java moderno.
-* POO correctamente aplicada.
+* Programación Orientada a Objetos.
+* Encapsulación.
 * Herencia cuando esté justificada.
 * Polimorfismo.
-* Encapsulación.
-* Uso adecuado de `enum`.
+* `enum`.
 * Colecciones adecuadas al problema.
-* Sin `instanceof` para resolver el procesamiento de nóminas.
-* Dependencias inyectadas por constructor.
-* Dependencias gestionadas mediante atributos `final`.
-* Uso de Lombok cuando resulte apropiado.
-* Repositorio separado de la lógica de negocio.
-* `ConcurrentHashMap` para el almacenamiento en memoria.
-* Aplicación Spring Boot de consola.
-* `CommandLineRunner` para ejecutar el escenario inicial.
-* `@Slf4j` para los mensajes de ejecución.
+* `ConcurrentHashMap`.
+* Spring Boot.
+* `CommandLineRunner`.
+* Lombok.
+* `@Slf4j`.
+* Inyección de dependencias mediante constructor.
+* Atributos `final` para las dependencias.
+* JUnit para las pruebas automatizadas.
+
+No se utilizará:
+
+* API REST.
+* Base de datos.
+* `instanceof` para resolver el tipo de empleado durante el procesamiento de nóminas.
 
 ---
 
-# 🧪 14. Comprobación final
+# 🧠 15. Al finalizar el reto...
 
-Antes de dar el reto por terminado, comprobad:
+No buscamos solamente que la aplicación funcione.
 
-### Modelo
+El objetivo es que seáis capaces de explicar las decisiones tomadas durante el diseño.
 
-* [ ] El modelo UML representa correctamente las entidades.
-* [ ] Las relaciones tienen multiplicidades coherentes.
-* [ ] La herencia está justificada.
-* [ ] Las responsabilidades están correctamente distribuidas.
+Al terminar deberíais poder responder, entre otras, a preguntas como:
 
-### POO
-
-* [ ] No existen bloques de `instanceof` para decidir el comportamiento.
-* [ ] Se utiliza polimorfismo.
-* [ ] Las clases mantienen una responsabilidad clara.
-* [ ] Las colecciones elegidas tienen sentido.
-
-### Aplicación
-
-* [ ] La aplicación arranca correctamente.
-* [ ] Los empleados se almacenan en el repositorio.
-* [ ] Se pueden recuperar los empleados.
-* [ ] Las nóminas se procesan correctamente.
-* [ ] Se muestra el salario bruto y neto.
-* [ ] Se muestran equipamientos y proyectos.
-* [ ] Se muestran las relaciones jerárquicas.
+* ¿Por qué `Employee` puede ser abstracta?
+* ¿Por qué utilizamos herencia?
+* ¿Dónde aparece el polimorfismo?
+* ¿Por qué evitamos `instanceof`?
+* ¿Qué diferencia hay entre una relación 1:N y una N:M?
+* ¿Por qué usamos `Set` en determinadas relaciones?
+* ¿Qué responsabilidad tiene un repositorio?
+* ¿Por qué el servicio no debería acceder directamente al `Map`?
+* ¿Qué ventajas tiene la inyección por constructor?
+* ¿Qué comprueba un test unitario?
+* ¿Qué ocurre cuando cerramos la aplicación?
 
 ---
 
-# 🚀 15. La pregunta final
+# 🚀 16. Y ahora viene Acceso a Datos...
 
-Cuando terminéis, pensad en la siguiente situación:
+Hasta ahora todos nuestros datos viven en memoria:
 
-> **La aplicación funciona perfectamente, pero cerramos IntelliJ y volvemos a ejecutarla.**
+```text
+EmployeeService
+       ↓
+EmployeeRepository
+       ↓
+ConcurrentHashMap
+       ↓
+    MEMORIA
+```
 
-¿Qué ha ocurrido con todos nuestros empleados?
+Pero cerramos la aplicación...
+
+**💥 Los datos desaparecen.**
+
+¿Qué ocurre con los empleados?
 
 ¿Con los proyectos?
 
@@ -465,8 +536,38 @@ Cuando terminéis, pensad en la siguiente situación:
 
 ¿Con las relaciones entre empleados?
 
-Todo ha desaparecido.
+### ❓ El nuevo problema
 
-### ¿Cómo conseguiríamos que los datos sobrevivieran al cierre de la aplicación?
+> **¿Cómo conseguimos que nuestros datos sobrevivan al cierre de la aplicación?**
 
-**Esta será precisamente una de las preguntas que comenzaremos a responder en Acceso a Datos.**
+Esta será precisamente una de las preguntas que comenzaremos a responder en **Acceso a Datos**.
+
+Durante el curso podremos evolucionar nuestro repositorio hacia:
+
+```text
+EmployeeService
+       ↓
+EmployeeRepository
+       ↓
+      JDBC
+       ↓
+   PostgreSQL
+```
+
+y posteriormente:
+
+```text
+EmployeeService
+       ↓
+EmployeeRepository
+       ↓
+Spring Data JPA
+       ↓
+   PostgreSQL
+```
+
+### 🎯 La idea que nos llevamos
+
+**Los objetos representan nuestro dominio, los servicios contienen la lógica de negocio y el repositorio se ocupa de cómo almacenamos los datos.**
+
+Ahora vamos a aprender qué ocurre cuando esos datos dejan de vivir solamente en memoria.
